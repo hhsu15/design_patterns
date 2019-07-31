@@ -36,7 +36,7 @@ class PersistentManager:
 ## Open Close Principle (OCP)
 Basically we should not jump in and modify and existing code that has been working. We should, though, be able to extend it. This will mean inheritance. 
 - We can enforce this principle by using an Enterprise design pattern called `Specification`
-```
+```python
 class Specification:
 	def is_satisfied(self, item):
 		pass
