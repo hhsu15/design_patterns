@@ -1,5 +1,6 @@
 # Design Pattern
 
+# SOLID Principles
 ## Single Responsibility Principle (SRP or SOP)
 Essentially one class should only have a singble resposibility.
 For example:
@@ -187,4 +188,97 @@ class Relationships(RelationshipBrowser):
 class InspectRelationship: # so now this is only depending on an abstraction
 	def __init__(self, rel_browser, name):
 		rel_browser.find_relationship(name)
+```
+
+# Gamma Categorization
+Design Patterns are typically split into three categories
+- Creational Patterns (Builder Patterns)
+  - think about contruction of objects
+- Structure Patterns
+  - concerned with the structures (e.g., class members)
+  - stress the importance of good API design
+- Behavioral Patterns
+  - they are all different
+
+## Builder Desgin Pattern
+Eseentially to solve the problem if you have a complex constructor
+Example, you want to construct an HTML paragraph. Rather than just join all the strings with tags, let's outsource to a beautiful builder that can build complicated html.
+Example:
+```python
+class HtmlElement:
+    indent_size = 2
+    
+    def __init__(self, name='', text=''):
+        self.text = text
+        self.name = name
+        self.elements = []
+    
+    def __str(self, indent):
+        """implementation of formatting the html element"""
+        lines = []
+        i = ' ' * (indent * self.indent_size)
+        lines.append(f'{i}<{self.name}>')
+        
+        if self.text:
+            i1 = ' ' * ((indent + 1) * self.indent_size)
+            lines.append(f'{i1}{self.text}')
+    
+        for e in self.elements:
+            # this is recursion part, append each string representation of an element
+            lines.append(e.__str(indent + 1))
+        
+        lines.append(f'{i}</{self.name}>')
+        return '\n'.join(lines)
+    
+    def __str__(self):
+        """for the print function"""
+        return self.__str(0)
+    
+    @staticmethod
+    def build(name):
+        """Provide another way to start the builder"""
+        return HtmlBuilder(name)
+    
+class HtmlBuilder:
+    """This is how you can construct a builder"""
+    def __init__(self, root_name):
+        self.root_name = root_name
+        self.__root = HtmlElement(root_name)
+        
+    def add_child(self, child_name, child_text):
+        self.__root.elements.append(
+        HtmlElement(child_name, child_text)
+        )
+        
+    def add_child_fluent(self, child_name, child_text):
+        """This is very neat! 
+        By returning self, you allow chainning these things
+        """
+        self.__root.elements.append(
+        HtmlElement(child_name, child_text)
+        )
+        return self
+        
+    
+    def __str__(self):
+        """This is the cool part!
+        when you print the builder obj, it calling the string representation 
+        of HtmlElement
+        """
+        return str(self.__root)
+    
+# builder = HtmlBuilder('ul') # samething
+builder = HtmlElement.build('ul')
+builder.add_child_fluent('li', 'Kyle').add_child_fluent('li', 'Kyly')
+ """  
+  <ul>
+    <li>
+      Kyle
+    </li>
+    <li>
+      Kyly
+    </li>
+  </ul>
+
+ """
 ```
