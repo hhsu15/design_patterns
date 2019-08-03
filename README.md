@@ -281,4 +281,98 @@ builder.add_child_fluent('li', 'Kyle').add_child_fluent('li', 'Kyly')
   </ul>
 
  """
+### Builder Facets
+You can use a base builder class and jump between sub-builder classes using certain tricks. Essentially by 
+  - passing the object around using fluent interface
+  - use @property to create sub-class object
+Example: 
+```python
+class Person:
+    def __init__(self):
+        self.street_address = None
+        self.postcode = None
+        self.city = None
+        
+        self.company_name = None
+        self.position = None
+        self.annual_income = None
+        
+    def __str__(self):
+        return f'Address {self.street_address}, {self.postcode}, {self.city}' + \
+               f'Employed at {self.company_name} as a {self.position} earning {self.annual_income}'
+
+class PersonBuilder:
+    """Show off a pretty cool trick here
+    We have the PersonBilder as base class which allows to you switch the subbuilders
+    
+    """
+    def __init__(self, person=Person()): # a little trick here to create a Person but also allow a already built person
+        self.person = person
+        
+    @property
+    def works(self):
+        """by calling this property you create a JobBuilder
+        the trick here is you pass the 'self.person'
+        when it goes JobBuilder it comes back to PersonBuilder
+        This allows to you use the base class to toggle the subclasses 
+        """
+        return PersonJobBuilder(self.person)
+    
+    @property
+    def lives(self):
+        """by calling this property you create a JobBuilder
+        the trick here is you pass the 'self.person'
+        when it goes JobBuilder it comes back to PersonBuilder
+        This allows to you use the base class to toggle the subclasses 
+        """
+        return PersonAddressBuilder(self.person)
+        
+    def build(self):
+        return self.person # so you return
+    
+
+class PersonJobBuilder(PersonBuilder):
+    def __inti__(self, person):
+        super().__init__(person)
+        
+    def at(self, company_name):
+        self.person.company_name = company_name
+        return self  # make it fluent interface
+    
+    def as_a(self, position):
+        self.person.position = position
+        return self
+    
+    def earning(self, annual_income):
+        self.person.annual_income = annual_income
+        return self
+    
+class PersonAddressBuilder(PersonBuilder):
+    def __inti__(self, person):
+        super().__init__(person)
+        
+    def at(self, street_address):
+        self.person.street_address = street_address
+        return self  # make it fluent interface
+    
+    def with_postcode(self, postcode):
+        self.person.postcode = postcode
+        return self
+    
+    def in_city(self, city):
+        self.person.city = city
+        return self
+    
+pb = PersonBuilder()
+person = pb\
+    .lives\
+        .at("1123 street")\
+        .in_city("Tokyo")\
+    .works\
+        .at("Bloomberg")\
+        .as_a("Data Engineer")\
+        .earning(100000)\
+    .build()
+print(person)  # Address 1123 street, None, TokyoEmployed at Bloomberg as a Data Engineer earning 100000  
+
 ```
