@@ -281,6 +281,8 @@ builder.add_child_fluent('li', 'Kyle').add_child_fluent('li', 'Kyly')
   </ul>
 
  """
+```
+
 ### Builder Facets
 You can use a base builder class and jump between sub-builder classes using certain tricks. Essentially by 
   - passing the object around using fluent interface
