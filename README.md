@@ -378,3 +378,124 @@ person = pb\
 print(person)  # Address 1123 street, None, TokyoEmployed at Bloomberg as a Data Engineer earning 100000  
 
 ```
+- By the way, if we do not want to violate the Open Close Principle (Open to extension, close to modification) - since we have to modify the base PersonBuilder everytime we make a new class - there is an alternative, like so:
+```python
+# An alternative way using inheritance so you do not violate Open Close Priciple
+
+class Person:
+    def __init__(self):
+        self.street_address = None
+        self.postcode = None
+        self.city = None
+        
+        self.company_name = None
+        self.position = None
+        self.annual_income = None
+        
+    @staticmethod
+    def new():
+        return PersonBuilder()
+        
+    def __str__(self):
+        return f'Address {self.street_address}, {self.postcode}, {self.city}' + \
+               f'Employed at {self.company_name} as a {self.position} earning {self.annual_income}'
+
+class PersonBuilder:
+    
+    def __init__(self): # a little trick here to create a Person but also allow a already built person
+        self.person = Person()
+        
+    
+    def build(self):
+        return self.person
+
+    
+class PersonAddressBuilder(PersonBuilder):
+    def at(self, street_address):
+        self.person.street_address = street_address
+        return self  # make it fluent interface
+    
+    def with_postcode(self, postcode):
+        self.person.postcode = postcode
+        return self
+    
+    def in_city(self, city):
+        self.person.city = city
+        return self
+    
+class PersonJobBuilder(PersonAddressBuilder):
+    def at_company(self, company_name):
+        self.person.company_name = company_name
+        return self  # make it fluent interface
+    
+    def as_a(self, position):
+        self.person.position = position
+        return self
+    
+    def earning(self, annual_income):
+        self.person.annual_income = annual_income
+        return self
+    
+# and you can go on and on....
+
+pb = PersonJobBuilder()
+me = pb\
+    .at("New Jersey")\
+    .with_postcode("0000")\
+    .in_city("Princeton")\
+    .at_company("BBG")\
+    .as_a("Engineer")\
+    .earning(10000000)\
+    .build() 
+    
+print(me)    #Address New Jersey, 0000, PrincetonEmployed at BBG as a Engineer earning 10000000
+
+```
+
+## Factories
+A component responsible solely for the wholesale(not piecewise) creation of objects
+
+### Factory Methods
+Methods (typically staticmethods) that create objects
+Example:
+```python
+from math import *
+from enum import Enum
+
+class CoordinateSystem(Enum):
+    CARTESIAN = 1
+    POLAR = 2
+    
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        
+    def __str__(self):
+        return f'x: {self.x}, y: {self.y}'
+        
+    # instead of using this...
+#     def __init__(self, a, b, system=CordinateSystem.CARTESIAN):
+#         if system = CordinateSystem.CARTESIAN:
+#             self.x = a
+#             self.y = b
+#         elif system == CoordinateSystem.POLAR:
+#             self.x = a * cos(b)
+#             self.y = a * sin(b)
+    
+    @staticmethod
+    def new_cartesian_point(x, y):
+        """Factory method"""
+        return Point(x, y)
+        
+    @staticmethod
+    def new_polar_point(rho, theta):
+        """Factory method"""
+        return Point(rho * cos(theta), rho * sin(theta))
+
+p = Point.new_cartesian_point(2, 3)
+p2 = Point.new_polar_point(2, 3)
+print(p)
+print(p2)
+
+```
