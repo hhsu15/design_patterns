@@ -590,3 +590,83 @@ kyle = EmployeeFactory.new_main_office_employee("Kyle")
 jess = EmployeeFactory.new_ny_office_employee("Jess")
 
 ```
+
+## Singleton
+For some components it only makes sense to have on ein the system such as dataybase repositoy or object factory. 
+```python
+
+class Database:
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Database, cls).__new__(cls,*args, **kwargs)
+        return cls._instance
+```
+### Singleton decorator
+```python
+# However this does not prevent __init__ gets called multiple times, which is half baked,
+# a better approach would be using a decorator
+
+def singleton(class_):
+    _instances = {}
+
+    def wrapper(*args, **kwargs):
+        if class_ not in _instances:
+            _instances[class_] = class_(*args, **kwargs)
+        return _instances[class_]
+    return wrapper
+
+@singleton
+class Database:
+
+    def __init__(self):
+        print("Loading database")
+
+```
+
+### Singleton metaclass
+```python
+class Singleton(type):
+    _instances = {}
+    
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls)\
+                .__call__(*args, **kwargs)
+        return cls._instances[cls]
+    
+class Database(metaclass=Singleton):
+    def __init__(self):
+        print("Loading database")
+        
+d1 = Database()
+d2 = Database 
+
+d1 is d2 # => True
+
+```
+
+### Monostate
+A variation of Singleton. You have a static state but you allow them to be overriden. The trick is you always referece the same object
+```python
+class CEO:
+    _shared_state = {
+        'name': 'John',
+        'age': 55        
+    }
+    
+    def __init__(self):
+        self.__dict__ = CEO._shared_state  # you are always refencing the same set of attributes
+        
+    def __str__(self):
+        return f'{self.name}, {self.age}'
+    
+c1 = CEO()
+print(c1)
+c2 = CEO()
+c2.name = 'Hsin'
+c2.age = 39
+print(c2)
+print(c1)
+
+```
