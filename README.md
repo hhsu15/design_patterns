@@ -499,3 +499,94 @@ print(p)
 print(p2)
 
 ```
+### Factory
+Factory is simply a separate class that manages all the factory methods.
+At the core, it's a class that allows to manufacture objects.
+- so in above example, it can be done as
+```python
+class PointFactory:
+	
+	@staticmethod
+	def new_cartesian_point(x, y):
+		pass
+
+	@staticmethod
+	def new_poloar_point(rho, theta):
+		pass
+
+```
+### Abstract Factory
+Make the factory class abstract class to build the hierarchy of the sub factory class
+```python
+class HotDrinkFactory(AB):
+	def prepare(self, amt):
+	pass
+
+class TeaFactory(HotDrinkFactory):
+	def prepare(self, amt):
+		...
+		return Tea()
+
+class CoffeeFactory(HotDrinkFactory):
+	def prepare(self, amt):
+		...
+		return Coffee()
+
+
+```
+
+## Prototype
+A partially or fully initialized object that you copy and make use of.
+Prototype reiterate existing design. Essentially we take advantage of some existing design and build/customize it.
+```python
+# key here is copying the object. In order to custom the object you copy properly, use deepcopy. Something like
+john = Persob('John', Address('tokyo', 'Japan')
+jane = copy.deepcopy(john)
+jane.name = 'Jane'
+jane.address.city = 'osaka'
+# rather than creating a jane Person object from scrach you can use Proptotype 
+# notice if you use copy.copy (shallow copy) you will have have the name attribute as Jane but the Address will still be reference so you will have it both for john and jane which won't be what you want.
+```
+### Use Factory for Prototype
+A nice way to make prototype easier is to use Factory. Example
+```python
+# use factory for prototype
+import copy
+
+class Employee:
+    def __init__(self, name, address):
+        self.name = name
+        self.address = address
+    
+    def __str__(self):
+        return f'{self.name} works at {self.address}'
+    
+class Address:
+    def __init__(self, street, city):
+        self.street = street
+        self.city = city
+        
+    def __str__(self):
+        return f'{self.street}, {self.city}'
+    
+    
+class EmployeeFactory:
+    main_office_employee = Employee('', Address('main street','Princeton'))
+    ny_office_employee = Employee('', Address('manhatan', 'NY'))
+    
+    @staticmethod
+    def new_main_office_employee(name):
+        new_main_emp = copy.deepcopy(EmployeeFactory.main_office_employee)
+        new_main_emp.name = name
+        return new_main_emp
+    
+    @staticmethod
+    def new_ny_office_employee(name):
+        new_ny_emp = copy.deepcopy(EmployeeFactory.ny_office_employee)
+        new_ny_emp.name = name 
+        return new_ny_emp
+    
+kyle = EmployeeFactory.new_main_office_employee("Kyle")
+jess = EmployeeFactory.new_ny_office_employee("Jess")
+
+```
