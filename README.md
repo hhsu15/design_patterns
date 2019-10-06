@@ -650,6 +650,7 @@ d1 is d2 # => True
 A variation of Singleton. You have a static state but you allow them to be overriden. The trick is you always referece the same object
 ```python
 class CEO:
+    # create a static variable for the attributes
     _shared_state = {
         'name': 'John',
         'age': 55        
@@ -669,4 +670,201 @@ c2.age = 39
 print(c2)
 print(c1)
 
+```
+
+## Adapter
+Getting the interface you want from the interface you have - the inbetween component. 
+Example:
+```python 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        
+def draw_point(p):
+    print('.', end='')
+
+# you are given above API
+
+# You want to use below
+class Line:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+        
+class Rectangle(list):
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.append(Line(Point(x, y), Point(x + width, y)))
+        self.append(Line(Point(x + width, y), Point(x + width, y + height)))
+        self.append(Line(Point(x, y), Point(x, y + height)))
+        self.append(Line(Point(x, y + height), Point(x + width, y + height)))
+
+        
+# here is the adapter which is an "in-btween component"
+class LineToPointAdapter:
+    cache = {}  # so we do not have to create a new object every time
+    
+    def __init__(self, line):
+        self.h = hash(line)  # use this as unique key
+        if self.h in self.cache:
+            return
+        
+        super().__init__()
+        
+        print(f'Generating points for line'
+              f'[{line.start.x}, {line.end.y}] ->'
+              f'[{line.end.x}, {line.end.y}]'
+             )
+        
+        left = min(line.start.x, line.end.x)
+        right = max(line.start.x, line.end.x)
+        top = min(line.start.y, line.end.y)
+        bottom = min(line.start.y, line.end.y)
+        
+        points = []
+        
+        if right - left == 0:
+            for y in range(top, bottom):
+                points.append(Point(left, y))
+        elif line.end.y - line.start.y == 0:
+            for x in range(left, right):
+                points.append(Point(x, top))
+                
+        self.cache[self.h] = points
+        
+    def __iter__(self):  # so you can interate the obj like a list
+        return iter(self.cache[self.h])
+        
+        
+        
+def draw(rcs):
+    print("\n\n--drawing some stuff---\n")
+    for rc in rcs:
+        for line in rc:
+            adapter = LineToPointAdapter(line)
+            for p in adapter:
+                draw_point(p)
+                
+if __name__ == '__main__':
+    rcs = [Rectangle(1, 1, 10, 10),
+         Rectangle(3, 3, 6, 6)]
+    
+    draw(rcs)
+    
+    draw(rcs) # notice send time it won't generate those points 
+              #becasue they have been created and stored in cache
+
+```
+
+## Bridge
+Bridge pattern prevents a "Cartesian product" complexity explosion. For example, if you would normally create a combinations of hierarchy scenerios where it ends up being 2*2, 4*4 due to the number of senerios
+
+Example:
+```
+# circle square
+# vector raster
+
+from abc import ABC
+
+class Renderer(ABC):
+	def render_circle(self, radius):
+		pass
+	# render_square
+
+class VectorRender(Renderer):
+	def render_circle(self, radius):
+		print(f'drawing a circle of radius {radius}')
+
+class RasterRenderer(Renderer):
+	def render_circle(self, radius):
+		def render_circle(self, radius):
+			print(f"Drawing pixels for a circle of radius {radius}')
+
+class Shape:  # this the Bridge pattern, which connects two hierachy with different classes with a parameter (in this case renderer)and you have the connection between each other  
+	def __init__(self, renderer):
+		self.renderer = renderer
+
+	def draw(self): pass
+
+	def resize(self): pass
+
+class Circle(Shape):
+	def __init__(self, renderer, radius):
+		super().__init__(renderer)
+		self.radius = radius
+
+	def draw(self):
+		self.renderer.render_circle(self.radius)
+
+	def resize(self, factor):
+		self.radius *= factor
+
+raster = RasterRenderer()
+vector = VectorRenderer()
+circle = Circle(vector, 5)
+circle.draw()
+circle.resize(2)
+circle.draw()
+```
+
+## Composite
+Composition lets us make compound objects. E.g., A Person object composes Address object and Job object. Or an object that is a group of other objects. Composite pattern is a mechanisim for treating individual objects and compositions of objects in an uniform manner
+
+Example:
+```
+class GraphicObject:
+	def __init__(self, color=None):
+		self.color = color
+		self.children = []
+		self.name = 'Group'
+
+	@property
+	def name(self):
+		return self._name
+
+	def _print(self, items, depth):
+	    # this is so called "do use" utility
+		items.append('*' * depth)  # * shows the level for children
+		if self.color:
+			items.append(self.color)
+		items.append(f'{self.name}\n')
+		for child in self.childrem:
+			child._print(items, depth + 1)
+	
+	def __str__(self):
+		# use recursive operation
+		items = []
+		self._print(items, 0)
+		return ''.join(items)
+
+class Circle(GraphicObject):
+	@property
+	def name(self):
+		return 'Circle"
+
+class Square(GraphicObject):
+	@property
+	def name(self):
+		return "Square"
+
+drawing = GraphicObject()
+drawing.name = 'my drawing'
+drawing.children.append(Square("Red")
+drawing.children.append(Circle("Yellow")
+
+group = GraphicObject()
+group.children.append(Circle('Blue'))
+group.children.append(Square('Blue'))
+drawing.children.append(group)
+print(drawing)
+   # will print this
+   """
+   my drawing
+   *RedSquare
+   *YellowSquare
+   *Group
+   **BlueCircle
+   **BlueSquare
+   """	
 ```
