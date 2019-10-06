@@ -761,7 +761,7 @@ if __name__ == '__main__':
 Bridge pattern prevents a "Cartesian product" complexity explosion. For example, if you would normally create a combinations of hierarchy scenerios where it ends up being 2*2, 4*4 due to the number of senerios
 
 Example:
-```
+```python
 # circle square
 # vector raster
 
@@ -812,7 +812,7 @@ circle.draw()
 Composition lets us make compound objects. E.g., A Person object composes Address object and Job object. Or an object that is a group of other objects. Composite pattern is a mechanisim for treating individual objects and compositions of objects in an uniform manner
 
 Example:
-```
+```python
 class GraphicObject:
 	def __init__(self, color=None):
 		self.color = color
