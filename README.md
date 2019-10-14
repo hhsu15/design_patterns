@@ -868,3 +868,90 @@ print(drawing)
    **BlueSquare
    """	
 ```
+
+## Command pattern
+Perform and record certain operations
+
+Example:
+```python
+class BankAcount:
+	OVERDRAFT_LIMIT = -500
+
+	def __init__(self, balance=0):
+		self.balance = balance
+	
+	def deposit(self, amount):
+		self.balance += amount
+		print(f'Deposited {amount}'
+			  f'balance= {self.balance}')
+
+	def withdraw(self, amount):
+		if self.balance - amount >= BankAccount.OVERDRAFT_LIMIT:
+			self.balance -= amount
+			print(f'Withdrew {amount}'
+			      f'balance = {self.balance}')
+	        return True
+
+		return False
+
+	def __str__(self):
+		return f'Balance = {self.balance}'
+
+"""You could, use these methods direcly and they will work, 
+However, in order to have records for these operations we can use
+the "Command" pattern. One good side effect is you will have the ability
+to "undo" the operation
+"""
+
+"""Interface for command"""
+class Command(ABC):
+	def invoke(self):
+		pass
+
+	def undo(self):
+		pass
+
+class BankAcountCommand(Command):
+	class Action(Enum):
+		DEPOSIT=0
+		WITHDRAW = 1
+	
+	def __init__(self, account, action, amount):
+		self.amount = amount
+		self.action = action
+		self.account = account
+		self.success = None
+
+    def invoke(self):
+		if self.action == self.Action.DEPOSIT:
+			self.account.deposit(self.amount)
+			self.success = True
+		elif self.action == self.Action.WITHDRAW:
+			self.success = self.account.withdraw(self.amount)
+
+	def undo(self):
+		if not self.success:
+			return
+
+		if self.action == self.Action.DEPOSIT:
+			self.account.withdraw(self.amount)
+		elif self.action == self.Action.WITHDRAW:
+			self.account.deposit(self.amount)
+
+
+if __name__ == '__main__':
+	ba = BankAccount()
+	cmd = BankAccountCommand(ba, BankAccountCommand.Action.DEPOSIT, 100)
+	cmd.invoke()
+	print(f'After $100 deposit: {ba}')
+
+	cmd.undo()
+	print(f'$100 undone: {ba}')
+
+	illegal_withdraw_cmd = BankAccountCommand(ba, BankAccountCommand.Action.WITHDRAW, 1000)
+	illegal_withdraw_cmd.invoke()
+	print('After impossible withdrawal: {ba}')
+
+	illegal_withdraw.cmd.undo()
+	print('After undo: {ba}')
+```
