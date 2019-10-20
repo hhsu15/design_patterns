@@ -955,3 +955,78 @@ if __name__ == '__main__':
 	illegal_withdraw.cmd.undo()
 	print('After undo: {ba}')
 ```
+### Example 2
+```python
+from abc import ABC
+from collections.abc import Iterable
+
+class Connectable(Iterable, ABC):
+    """base class"""
+    def connect_to(self, other):
+	    if self == other:
+		    return
+
+        for s in self:
+		   for o in other:
+		      s.outputs.append(o)
+			  o.inputs.append(s)
+
+class Neuron(Connectable):
+    def __init__(self, name):
+		self.name = name
+		self.inputs = []
+		self.outputs = []
+	
+	def __str__(self):
+		return f'{self.name}' \
+		       f'{len(self.inputs)} inputs, ' \
+			   f'{len(self.outputs)} outputs'
+    
+	def __iter__(self):
+	    "Turn a scala value into a collection"
+		yield self
+	
+	#def connect_to(self, other):
+	#   self.outputs.append(other)
+	#	self.inputs.append(self)
+
+class NeuronLayer(list, Connectable):
+    def __init__(self, name, count):
+	    super().__init__()
+		self.name = name
+		for x in range(0, count):
+		    self.append(Neuron(f'{name}--{x}'))
+
+	def __str__(self):
+	    return f'{self.name} with {len(self)} neurons'
+
+if __name__ = '__main__':
+    # now imagine you have to connect two neurons but you don't want to end up having to write all the combinations 
+    neuron1 = Neuron('n1')
+	neuron2 = Neuron('n2')
+	layer1 = NeuronLayer('L1', 3)
+	layer2 = NeuronLayer('L2', 3)
+	
+    neuron1.connect_to(neuron2)
+	neuron1.connect_to(layer1)
+	layer1.connect_to(neuron2)
+	layer1.connect_to(layer2)
+
+	print(neuron1)
+	print(layer1)
+	print(neuron2)
+	print(layer2)
+
+
+```
+- Summary 
+  - Objects can use other objects via inheritance/composition
+  - Some composed and singular objects need similar/identical behaviors 
+  - Composite design pattern lets us treat both types of objects uniformly
+  - Python supports iteration with __iter__  and Iterable ABC
+  - A single object can make itself iterable by yielding `self` from __iter__
+
+
+## Decorator
+Ficilitates the addition of behaviors to individual objects without inheriting from them.
+
