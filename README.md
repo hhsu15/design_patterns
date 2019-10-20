@@ -1028,5 +1028,249 @@ if __name__ = '__main__':
 
 
 ## Decorator
-Ficilitates the addition of behaviors to individual objects without inheriting from them.
+Ficilitates the addition of behaviors to individual objects without inheriting from them. Python decorator is one example.
 
+```python
+"""Dynamic class decorator"""
+
+class FileWithLogging:
+    def __init__(self, file):
+        self.file = file
+	
+	def writelines(self, strings):
+	    '''This is my custom method '''
+		self.file.writelines(strings)
+		print(f'wrote {len(strings)} lines')
+
+	def __iter__(self):
+		self.file.__iter__()
+
+	def __next__(self):
+		self.file.__next__()
+    
+	'''From below is what's cool here! We can save some time by using this dynamic programing.
+	Essentially whatever methods we want to use from the underlying objects we use the following methods to delagate them to. For example, the "write" method'''
+	def __getattr__(self, item):
+		return getattr(self.__dict__['file'], item)
+
+	def __setattr__(self, key, value):
+		if key == 'file':
+			self.__dict__[key] = value
+		else:
+			setattr(self.__dict__['file'], key, value)  # set
+
+	def __delattr__(self, item):
+		delattr(self.__dict__['file'], item)
+
+
+if __name__ == '__main__':
+	file = FileWithLogging(open('hello.txt', 'w'))
+	file.writelines('hello', 'world')
+	file.write('testing')
+	file.close()
+```
+## Facade (pronouce like fasade)
+Provide nice interface that will just work. Users don't need to know the implementation details
+Example:
+```python
+class Buffer:
+"Low level implementation api"
+	def __init__(self, width=30, height=20):
+		self.width = width
+		self.height = height
+		self.buffer = [' '] * (width * height)  # create buffer as placeholder
+	
+	def __getitem__(self, item):
+		return self.buffer.__getitem__(item)
+
+	def write(self, text):
+		self.buffer += text
+
+	
+class Viewport:
+	def __init__(self, buffer=Buffer()):
+		self.buffer = buffer
+		self.offset = 0
+
+	def get_char_at(self, index):
+		return self.buffer[index+self.offset]
+
+	def append(self, text):
+		self.buffer.write(text)
+
+"""Now here comes the facade"""
+class Console:
+	def __init__(self):
+		b = Buffer()
+		self.current_viewport = Viewport(b)
+		self.buffers = [b]
+		self.viewports = [self.current_viewport]
+	
+	def write(self, text):
+		return self.current_viewport.buffer.write(text)
+		
+	def get_char_at(self, index):
+		return self.current_viewport.get_char_at(index)
+
+if __name__ = '__main__':
+	c = Console()
+	c.write('hello')
+	ch = c.get_char_at(0)
+```
+
+## Flyweight design patter
+A space optimization technique that lets us use less memory by storing externally the data associated with simliar objects.
+
+The way to do it is essentially:
+  - store common data externally
+  - specify an index or a reference into the external data store
+  - define the idea of "ranges" on homegeneous collections and store data related to those ranges
+Example:
+```python
+import string
+import random
+
+class User:
+	def __init__(self, name):
+		self.name = name
+
+class User2:
+	"""This one uses Flyweight pattern
+	We are storing the pointers for the chars
+	"""
+	strings = [] # a static variable bound to the class storing all the string names. So the idea is all the objects will point the names to here rather than storing the names with them
+
+	def __init__(self, full_name):
+		"""simply store the indeces for the setup"""
+		def get_or_add(s):
+			if s in self.strings:
+				return self.strings.index(s)
+			else:
+				self.strings.append(s)
+				return len(self.strings) - 1
+		
+		# this will give you two indices for your name. One for first name, one for last name
+		self.names = [get_or_add(x)
+					  for x in full_name.split(' ')]  # loop thru first name and last name
+	
+	def __str__(self):
+		return ' '.join([self.strings[x] for x in self.names])
+
+def random_string():
+	chars = string.ascii_lowercase
+	return ''.join(
+	  [random.choice(chars) for i in range(8)]
+	)
+
+
+
+if __name__ == '__main__':
+	users = []
+
+	first_names = [random_string() for x in range(100)
+	last_names = [random_string() for x in range(100)]
+
+	for first in first_names:
+		for last in last_names:
+		 	users.append(User2(f'{first} {last}')
+
+```
+
+```python
+class FormattedText:
+	def __init__(self, plain_text):
+		self.plain_text = plain_text
+		self.caps = [False] * len(plain_text)
+
+	def capitalize(self, start, end):
+		for i in range(start, end):
+			self.caps[i] = True
+
+	def __str__(self):
+		result = []
+		for i in range(len(self.plain_text)):
+			c = self.plain_texy[i]
+			result.append(
+			  c.upper() if self.caps[i] else c
+			)
+		return ''.join(result)
+
+class BetterFormattedText:
+"""Flyweight version"""
+	def __init__(self, plain_text):
+		self.plain_text = plain_text
+		self.formatting = []
+
+	class TextRange:
+	    """The essense of flyweight"""
+		def __init__(self, start, end, capitalize=False):
+			self.start = start
+			self.end = end
+			self.capitalize = capitalize
+
+		def covers(self, position):
+			return self.start <= position <= self.end
+
+	def get_range(self, start, end):
+		range = self.TextRange(start, end)
+		self.formatting.append(range)
+		return range  # return the TextRrange obj so you can subsquently call the method, say `.capitalize`
+
+	def __str__(self):
+		result = []
+		for i in range(len(self.plain_text)):
+			c = self.plain_text[i]
+			for each_range in self.formating:
+				if each_range.covers(i) and each_range.capitalize:
+				c = c.upper()
+			result.append(c)
+		return ''.join(result)
+
+
+if __name__ == '__main__':
+	text = 'hello world'
+	ft = FormattedText(text) # the problem with this is if the text is large, say 1 million words we would end up assigned 1 million boolean values.
+	ft.capitalized(0, 4)
+	print(ft)
+
+	bft = BetterFormattedText(text)
+	bft.get_range(2, 6).capitalize = True
+
+```
+
+## Proxy design pattern
+A class that functions as an interface to a particular resource. That resource may be remote, expensive to construct, or may require logging or some other added functionalities.
+
+A typical proxy class is "protection proxy". For example, for access control
+```python
+class Car:
+	def __init__(self, driver):
+		self.driver = driver
+
+	def drive(self):
+		print(f'Car is driving by {self.driver.name}')
+
+# now you want to change the sementics without changing the code for Car implementation. Here comes the protection proxy
+class CarProxy:
+	def __init__(self, driver):
+		self.driver = driver
+		self._car = Car(driver)
+
+    def drive(self):
+		if self.driver.age < 21:
+			print('Driver is too young')
+		else:
+			self._car.drive()
+
+
+class Driver:
+	def __init__(self, name, age):
+		self.name = name
+		self.age = age
+
+if __name__ == '__main__':
+	driver = Driver('John', 20)
+	car = CarProxy(driver)
+	car.drive()
+
+```
