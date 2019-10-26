@@ -1258,7 +1258,7 @@ class CarProxy:
 		self._car = Car(driver)
 
     def drive(self):
-		if self.driver.age < 21:
+		if self.driver.age < 21
 			print('Driver is too young')
 		else:
 			self._car.drive()
@@ -1273,5 +1273,104 @@ if __name__ == '__main__':
 	driver = Driver('John', 20)
 	car = CarProxy(driver)
 	car.drive()
+```
+
+- Example of Virtual Proxy
+- the goal is without changing the underlying object (i.e., OCP) but somehow have it look the same but work the way we want. Below example shows how we can use virtual proxy to avoid loading image when obj is created
+
+```python
+class BipMap:
+	def __init__(self, filename):
+		self.filename = filename
+		print(f'Loading image from {self.filename}') # this is what we try to mask
+
+	def draw(self):
+		print('drawing image')
+
+def draw_image(image):
+	print('About to draw image')
+	image.draw()
+	print('Done drawing image')
+
+class LazyBitMap:
+    """Virtual proxy"""
+	def __init__(self, filename):
+		self.filename = filename
+		self._bitmap = None
+
+	def draw(self):
+		if not self._bitmap:
+			self._bitmap = BitMap(self.filename)
+		self._bitmap.draw()
+
+if __name__ = '__main__':
+	bmp = BitMap('something.jpg') # this will load the image even though you don't draw it which can be expensive
+	draw_image(bmp) 
+    
+	# use the virtual proxy
+	bmp = LazyBitMap(something.jpg)
+	draw_image(bmp)
+	draw_image(bmp) # if you draw the same thing twice you will see it only gets load once. 
+
+```
+#### Proxy VS. Decorator
+Proxy provides an identical interface to the underlying components; decorator provides an enhanced interface
+
+## Chain of Respobsibility design patter
+A chain of components who all get a chacne to process a command or a query, optionally having default processing implementation and a ability to terminate the processing chain.
+
+```python
+class Creature:
+	def __init__(self, name, attack, defence):
+		self.name = name
+		self.attack = attack
+		self.defense = defense
+	
+	def __str__(self):
+		return f'{self.name} ({self.attack})/{self.defence})'
+
+class CreatureModifier:
+    """Base class"""
+	def __init__(self, creature):
+		self.creature = creature
+		self.next_modifier = None  # This is where we build the chain so you can pick up multiple modifier on a creature. 
+    
+	def add_modifier(self, modifier):
+	    """To provide the chain effect"""
+		if self.next_modifier: # if we already have a modifier ofcouse we will call the next modifier (recursive here)
+			self.next_modifier.add_modifier(modifier)
+		else:
+			self.next_modifier = modifier
+
+	def handle(self):
+		"""becasue this is a base class, we are relying on the sub class to handle"""
+		if self.next_modifier:
+			self.next_modifier.handle()
+   
+class DoubleAttackModifier(CreatureModifier):
+	def handle(self):
+		print(f'Doubling {self.creature.name}' 's attak')
+		self.creature.attack *= 2
+		super().handle()  # criticle! call the base class's handle becasue it's the one that propagates the chain responsibilities
+
+class IncreaseDefenseModifier(CreatureModifier):
+	def handle(self):
+		if self.creature.attack <= 2:
+		print(f'Increasing {self.creature.name} defense')
+		self.creature.defense += 1
+		super().handle()
+
+if __name__ == '__main__':
+	goblin = Creature("Goblin", 1, 1)
+	print(goblin)
+    
+	# here is the idea, you have a root top level element
+	root = CreatureModifier(goblin)  # this is the base abstract class which does not do anything
+	# what we can do, is to apply custom modifier object under the root.
+	root.add_modifier(DoubleAttackModifier(goblin))
+	root.add_modifier(DoubleAttackModifier(goblin)) # apply same modifier twice
+	root.add_modifier(IncreaseDefenseModifier(goblin)) # apply different modifier
+	root.handle()
+	print(goblin)
 
 ```
