@@ -1318,7 +1318,7 @@ Proxy provides an identical interface to the underlying components; decorator pr
 
 ## Chain of Respobsibility design patter
 A chain of components who all get a chacne to process a command or a query, optionally having default processing implementation and a ability to terminate the processing chain.
-
+- Example using chain of reference (linked list)
 ```python
 class Creature:
 	def __init__(self, name, attack, defence):
@@ -1360,6 +1360,14 @@ class IncreaseDefenseModifier(CreatureModifier):
 		self.creature.defense += 1
 		super().handle()
 
+class NoBonusesModifier(CreateModifier):
+    """If you don't want the chain of resposibilities,
+	You do not call the super().handle()
+	"""
+	def handle(self):
+		print('no bonuses for you')
+
+
 if __name__ == '__main__':
 	goblin = Creature("Goblin", 1, 1)
 	print(goblin)
@@ -1367,10 +1375,106 @@ if __name__ == '__main__':
 	# here is the idea, you have a root top level element
 	root = CreatureModifier(goblin)  # this is the base abstract class which does not do anything
 	# what we can do, is to apply custom modifier object under the root.
+ 
+    # root.add_modifier(NoBonusesModifier(goblin)) # if you apply this modifier then no other modifier will be applied. This will essentially stop the chain of responsibilities
 	root.add_modifier(DoubleAttackModifier(goblin))
 	root.add_modifier(DoubleAttackModifier(goblin)) # apply same modifier twice
 	root.add_modifier(IncreaseDefenseModifier(goblin)) # apply different modifier
 	root.handle()
 	print(goblin)
 
+```
+
+### Command Query Separation (CQS)
+To allow you to invoke the chain of responsiblities dynamically..
+it's quite complex and we are using the following design patterns
+- Event Broker (observer design pattern)
+- CQS
+So it works like this,
+- you have a Event which is a list of functions
+- When you apply a modifier it adds the function to the event
+- "Game" object keeps track of the events(queries) 
+- When you print the creature object it essentially triggers all all queries (event) by calling `attack` and `defense` property
+- you can also apply the scope using `with` to limit the effect of the modifier
+- Example using centralized construct:
+```python
+class Event(list):
+    """Event is a list of functions you can call"""
+	def __call__(self, *args, **kwargs):
+		for item in self:
+			item(*args, **kwargs)
+
+class WhatToQuery(Enum):
+	ATTACK = 1
+	DEFENSE = 1
+
+class Query:
+	def __init__(self, creature_name, what_to_query, default_value):
+		self.value = default_value
+		self.what_to_query = what_to_query
+		self.creature_name = creature_name
+
+class Game:
+    """Event Broker that basically stores all the event functions"""
+	def __init__(self):
+		self.queries = Event()
+
+    def perorm_query(self, sender, query):
+	    """Call a list of functions"""
+		self.queries(sender, query)
+		
+class CreatureModifier(ABC):
+	def __init__(self, game, creature):
+		self.game = game
+		self.creature = creature
+		self.game.queries.append(self.handle)
+
+	def handle(self, sender, query):
+		pass
+
+	def __enter__(self):
+		pass
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		self.game.queries.remove(self.handle) # remove from the event
+
+class DoubleAttackModifier(CreatureModifier):
+	def handle(self, sender, query):
+		if sender.name == self.creature.name and \
+			query.what_to_query == WhatToQuery.ATTACK:
+			query.value *= 2  # this is where the attribute value gets modified
+
+class Creature:
+	def __init__(self, game, name, attack, defense):
+		self.initial_defense = defense
+		self.initial_attack = attack
+		self.name = name
+		self.game = game
+
+	@property
+	def attack(self):
+		#query
+		q = Query(self.name, WhatToQuery.ATTACK, self.initial_attack)
+		self.game.perform_query(self, q)
+		return q.value
+	
+	@property
+	def defense(self):
+		#query
+		q = Query(self.name, WhatToQuery.DEFENSE, self.initial_defense)
+		self.game.perform_query(self, q)
+		return q.value
+    
+	def __str__(self):
+		return f'{self.name} ({self.attack}/{self.defense})'
+
+if __name__ == '__main__':
+	game = Game()
+	goblin = Creature(game, 'Strong Goblin', 2, 2)
+	print(goblin)
+    
+	with DoubleAttackModifier(game, goblin): # as soon as it's built, the DoubleAttackModifier is going to intercept the goblin and change it's value
+	    print(goblin) # should print "Strong Goblin (4/2)
+
+    print(goblin)  # should print (2/2) since it's out of scope
 ```
