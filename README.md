@@ -977,8 +977,11 @@ to "undo" the operation
 
 """Interface for command"""
 class Command(ABC):
+	def __init__(self):
+		self.success = False
+	
 	def invoke(self):
-		pass
+		pass	
 
 	def undo(self):
 		pass
@@ -989,10 +992,10 @@ class BankAcountCommand(Command):
 		WITHDRAW = 1
 	
 	def __init__(self, account, action, amount):
+		super().__init__()
 		self.amount = amount
 		self.action = action
 		self.account = account
-		self.success = None
 
     def invoke(self):
 		if self.action == self.Action.DEPOSIT:
@@ -1010,6 +1013,76 @@ class BankAcountCommand(Command):
 		elif self.action == self.Action.WITHDRAW:
 			self.account.deposit(self.amount)
 
+class CompositBankAccountCommand(Command, list):
+	"""Composite command
+	It's a Command with the same interface and it's also a list
+	
+	"""
+	def __init__(self, items=[]):
+		super().__init__()
+		for i in items:
+			self.append(i)
+
+	def invoke(self):
+		for x in self:
+			x.invoke()
+
+ 	def undo(self):
+		for x in reversed(self):
+			x.undo()
+
+
+class MoneyTransferCommand(CompositeBankAccountCommand):
+	def __init__(self, from_acct, to_acct, amount):
+		super().__init__([
+		  BankAccountCommand(from_acct, 
+		  					BankAccount.Action.WITHDRAW, amount),
+		  BankAccountCommand(to_acct,
+		  					BankCoountCommand.Action.DEPOSIT, amount)
+		])
+	
+	def invoke(self):
+		ok = True
+		for cmd in self:
+			if ok:
+				cmd.invoke()
+				ok = cmd.success
+			else:
+				cmd.success = False
+		self.success = ok
+
+
+class TestSuite(unittest.TestCase):
+  	def test_composite_deposit(self):
+	ba = BankAccount()
+	deposit1 = BankAccountCommand(
+		ba, BankAccountCommand.Action.DEPOSIT, 100
+	)
+
+	deposit2 = BankAccountCommand(
+		ba, BankAccountCommand.Action.DEPOSIT, 50
+	)
+     
+	composite = CompositeBankAccountCommand([deposit1, deposit2])
+	composite.invoke()
+	print(ba)
+
+	composite.undo()
+	print(ba)
+    
+	test_transfer(self):
+		ba1 = BankAccount(100)
+		ba2 = BankAccount()
+
+		amount = 100
+
+		transfer = MoneyTransferCommand(ba1, ba2, amount)
+		transfer.invoke()
+		print(ba1, ba2)
+
+		transfer.undo()
+		print(ba1, ba2)
+
 
 if __name__ == '__main__':
 	ba = BankAccount()
@@ -1026,6 +1099,8 @@ if __name__ == '__main__':
 
 	illegal_withdraw.cmd.undo()
 	print('After undo: {ba}')
+
+	unittest.main()  # this will run the unittests
 ```
 
 ## Decorator
