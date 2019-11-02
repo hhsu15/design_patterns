@@ -1679,3 +1679,104 @@ def calc(input):
 if __name__ = '__main__':
 	calc('(13+4)+(3+25)')
 ```
+
+## Iterator design pattern
+An object that facilitates the traversal of a datastructure
+
+Normally, you woukd implement the `__iter__` with `__next__` protocal however in reality it can result in ugly and messy code, so here is an example of a nice and readable implementation (without the custom iter object
+
+```python
+class Node:
+	def __init__(self, value, left=None, right=None):
+		self.right = right
+		self.left = left
+		self.value = value
+
+		self.parent = None
+		if self.left:
+			self.left.parent = self
+		if self.right:
+			self.right.parent = self
+
+	def __iter__(self):
+		return InOrderIterator(self)
+
+class InOrderIterator:
+	def __init__(self, root):
+		self.root = self.current = root
+		self.yielded_start = False
+		while self.current.left:
+			self.current = self.current.left
+
+    def __next__(self):
+		....this is going to be ugly so I give up. Essentially this a stateful way which keeps manipulating `self.current` and eventually return self.current
+
+def traverse_in_order(root):
+	"""This is the more elegant way of implementation you would find in the text book.
+	Basically, you "yield" from the left to right
+	"""
+	def traverse(current):
+		if current.left:
+			for left in traverse(current.left):
+				yield left
+			# after you are done with the left side, you yield the current element
+			yield current
+			for right in traverse(current.right):
+				yield right
+	
+	for node in traverse(root):
+		yield node
+
+
+if __name__ = '__main__':
+	# in-order 
+
+	root = Node(1, Node(2), Node(3)) # in-order will give you 2, 1, 3
+
+	for y in traverse_in_order(root):
+		print(y.value)
+
+```
+
+# Array Backed Properties
+This is very interesting design. Essentially rather than normallyhow would you set up the attributes and make properties for calcuated result, you create a list that stores the values of those property which allows you to be more easily manage the computation.
+
+```python
+class Creature:
+	_strength = 0
+	_agility = 1
+	_intelligence = 2
+
+	def __init__(self):
+        # so intead of creating these attributes...
+		#self.strength = 10
+		#self.agility = 10
+		#sefl.intelligence = 10
+        
+		self.stats = [10, 10, 10]  # just one attribute
+
+	@property
+	def sum_of_stats(self):
+		# return self.strength + self....... # this is annoying
+		return sum(self.stats) # now this is much easier
+	
+	@property
+	def max_of_stats(self):
+		return max(self.stats)
+
+	@property
+	def avg_of_stats(self):
+		return self.sum_of_stats / len(self.stats)
+    
+	@property
+	def strength(self):
+		"""So you can still access these as properties"""
+		return self.stats[Creature._strength]
+	
+	@strength.setter
+	def strength(self, value):
+		self.stats[Creature._strength] = value
+
+
+
+```
