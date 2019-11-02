@@ -1553,3 +1553,129 @@ if __name__ == '__main__':
 
     print(goblin)  # should print (2/2) since it's out of scope
 ```
+
+## Interpreter
+Interpreper design pattern. Make them object oriented structure. 
+Mainly lex anbd parse
+
+Example:
+```python
+class Token:
+	class Type(Enum):
+		INTEGER = auto()
+		PLUS = auto()
+		MINUS = auto()
+		LPAREN = auto()
+		RPAREN = auto()
+
+	def __init__(self, type, text):
+		self.type = type
+		self.text = text
+
+	def __str__(self):
+		return f'`{self.text}`'
+
+def lex(input):
+   result = []
+   i = 0
+   while i < len(input):
+   	if input[i] == '+':
+		result.append(Token(Token.Type.PLUS, '+'))
+
+   	if input[i] == '-':
+		result.append(Token(Token.Type.MINUS, '-'))
+
+   	elif input[i] == '(':
+		result.append(Token(Token.Type.LPAREN, '('))
+   	
+	elif input[i] == ')':
+		result.append(Token(Token.Type.RPAREN, ')'))
+    
+	else:
+	    # get the integer
+		digits = [input[i]] # start with current digit
+		for j in range(i+1, len(input)):
+			if input[j].isdigit():
+				digits.append(input[j])
+				i += 1
+			else:
+				result.append(Token(Token.Type.INTEGER,
+									''.join(digits)))
+				break
+	i += 1
+		return result
+
+class Integer:
+	def __init__(self, value):
+		self.value = value
+
+class BinaryExpression:
+	class Type(Enum):
+		ADDITION = auto()
+		SUBSTRACTION = auto()
+
+	def __init__(self):
+		self.type = None
+		self.left = None  # left part for binary exression
+		self.right = None  # right part for binary expression
+
+	@property
+	def value(self):
+		if self.type = self.Type.ADDITION:
+			return self.left.value + self.right.value # left plus right
+		elif self.type = self.Type.SUBSTRACTION:
+			return self.left.value - self.right.value # left minus right
+		
+
+def parse(tokens):
+	"""Traverse the tokens and parse the elements"""
+	result = BinaryExpresiion() # result is always going to be BinaryExpression
+
+	have_lhs = False # have left hand side
+	i = 0
+	while i < len(tokens):
+		token = tokens[i]
+
+		if token.type == Token.Type.INTEGER:
+			integer = Integer(int(token.text))
+			if not have have_lhs:
+				result.left = integer 
+				have_lhs = True # now I have left hand side
+
+			else:
+				result.right = integer # now I have right hand side
+		elif token.type = Token.Type.PLUS:
+			result.type = BinaryExpression.Type.ADDITION
+		elif token.type = Token.Type.MINUS:
+			result.type = BinaryExpression.Type.SUBSTRACTION
+        
+		# this is the difficult part when you see parathesis
+		# a recursive operation which basically
+		elif toke.type = Token.Type.LPAREN:
+			j = i
+			while j < len(tokens): # start with where you are
+				if tokens[j].type = Token.Type.RPAREN: # advance until you find the right parenthesis
+					break
+				j += 1
+			
+			subexpression = tokens[i+1:j] # parse the subexpressio within the parenthesises
+			element = parse(subexpression) # pass the subex to parse recursively. Remember "parse()" returns BinaryExpression
+			if not have_lfs:
+				result.left = element
+				have_lhs = True
+			else:
+				result.right = element
+			i = j
+		i += 1
+	return result
+
+
+def calc(input):
+	tokens = lex(input)
+	print(' '.join(map(str, tokens)))
+    parsed = parse(tokens)
+
+
+if __name__ = '__main__':
+	calc('(13+4)+(3+25)')
+```
