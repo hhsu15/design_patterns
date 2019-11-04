@@ -1494,7 +1494,7 @@ class Game:
 	def __init__(self):
 		self.queries = Event()
 
-    def perorm_query(self, sender, query):
+    def perform_query(self, sender, query):
 	    """Call a list of functions"""
 		self.queries(sender, query)
 		
@@ -1779,4 +1779,283 @@ class Creature:
 
 
 
+```
+
+## Mediator
+In a system the components can be in and out at anytime and therefore it does not make senset to directly reference each one, Like chat room. A chat midiator will connect everyone in the same room and allow everyone to send messages to one another
+
+- create the mediator and have each object in the system refer to it (e.g., in a property)
+- midiator engages in bidirectional communication with its connected components
+- mediator has functions the components can call (like broadcast)
+- components have functions mediator can call (like receive)
+- Evenbt processing libraries make communication easier to implement (i.e., the components will subscribe the functions to the event and you can just fire the events)
+```python
+
+class Person:
+	def __init__(self, name):
+		self.name = name
+		self.chat_log = []
+
+		self.room = None  # this will be assigned as chat room
+
+	def receive(self, sender, message):
+		s = f'{sender}: {message}'
+		print(f'[{self.name}\'s chat session] {s})
+		self.chat_log.append(s)
+
+	def private_message(self, who, message):
+	    """Use the chatroom mediator"""
+		self.room.message(self.name, who, message)
+
+	def say(self, message):
+		self.room.broadcast(self.name, message)
+
+
+class ChatRoom:
+	def __init__(self):
+		self.people = []
+	
+	def join(self):
+		join_msg = f'{person.name} joins the chat'
+		self.broadcast('room', join_msg)
+		person.room = self
+		self.people.append(person)
+	
+	def broadcast(self, source, msg):
+		for p in self.people:
+			if p.name != source:
+				p.receive(source, message)
+
+	def message(self, source, destination, message):
+		for p in self.people:
+			if p.name == destination:
+				p.receive(source, message)
+
+if __name__ == '__main__':
+	room = ChatRoom()
+
+	jane = Person('Jane')
+	john = Person('John')
+
+	room.join(john)
+	room.join(jane)
+
+	john.say('hi room')
+	jane.say('hi John')
+
+	simon = Person('Simon')
+	room.join(simon)
+	simon.say(('hi everyone')
+
+	jane.private_msg("glad you can join us")
+
+```
+
+### Mediator with Events
+```python
+
+class Event(list):
+	"""Recall event is a list of functions"""
+	def __call__(self, *args, **kwargs):
+		for item in self:
+			item(*args, **kwargs)
+
+
+class Game:
+	"""Mediator."""
+	def __init__(self):
+		self.events = Event()
+	
+	def fire(self, args):
+		self.events(args)
+
+
+class GoalScoredInfo:
+	def __init__(self, who_scored, goals_scored):
+		self.who_scored = who_scored
+		self.goals_scored = goals_scored
+
+class Player:
+	def __init__(self, name, game):
+		self.name = name
+		self.game = game
+		self.goals_scored = 0
+
+	def score(self):
+		self.goals_scored += 1
+		# when someone scored, we want to broadcast the event to people who subscribe to the game
+		args = GoalScoredInfo(self.name, self.goal_scored)
+		self.game.fire(args) # use the game mediator to fire the events
+
+class Coach:
+	def __init__(self, game):
+		# they need to subscribe to the game's events
+		game.events.append(self.celebrate_goal)
+		game.events.append(self.say_oh_yeah)
+
+	def celebrate_goal(self, args):
+		if isinstance(args, GoalScoreIndo) and \
+			args.goals_scored < 3:
+			print(f'Coach says: well done, {args.who_scored}')
+
+	def say_oh_yeah(self, args):
+		print(f'Oh yeah!')
+
+if __name__ = "__main__":
+	game = Game()
+	player = Player("Sma", game)
+	coach = Coach(game)
+
+	player.score()
+	player.score()
+
+```
+
+
+## Memento design pattern
+Memento takes a snapshot of a state which will allow you to restore the system to that state. Memento is simply a token/handle class with no functions of its own.
+We can use memento to perform undo and redo functions
+```python
+
+class BankAccount:
+	def __init__(self, balance):
+		self.balance = balance
+		# to be able to perform "undo" and "redo" we can store all the snapshots (mementos)
+		self.changes = [Memento(self.balance)]  # this encapcilates all the states
+		self.current = 0  # start with position 0
+	def deposit(self, val):
+		self.balance += val
+		m = Memento(self.balance) # make a memento
+		self.changes.append(m) # add to chagnes
+		self.current += 1  # you are now in this memento
+		return m
+
+	def restore(self, memento):
+		if memento:
+			self.balance = memento.balance
+			self.changes.append(memento) # again, add this state to changes
+			self.current = len(self.changes) - 1  # when you resore, you move back one step
+
+	def undo(self):
+		if self.current > 0:
+			self.current -= 1
+			m = self.changes[self.current]
+			self.balance = m.balance
+			return m
+		return None
+
+	def redo(self):
+		if self.current + 1 < len(self.changes):
+			self.current += 1
+			m = self.changes[self.current]
+			self.balance = m.balance
+			return m
+		return None
+
+	def __str__(self):
+		return f'Balance = {self.balance}'
+
+class Memento:
+	def __init__(self, balance):
+		self.balance = balance
+
+if __name__ == '__main__':
+	ba = BankAccount(100)
+	ba.deposit(50)
+	ba.deposit(25)
+
+	ba.undo() # will give you balance of 150
+    ba.undo() # will give you balance of 100
+	ba.redo() # will give balance back to 150
+		
+```
+
+## Observer 
+This is probablly the most popular design pattern. You want to observe certain events and get alerted when the event occurs.
+
+```python
+class Event(list):
+	def __call__(self, *args, **kwargs):
+		for item in self:
+			item(*args, **kwargs)
+
+class Person:
+	def __init__(self, name, address):
+		self.name = name
+		self.address = address
+		self.falls_ill = Event()
+
+	def catch_a_cold(self):
+		self.falls_ill(self.name, self.address)
+
+def call_a_doctor(name, address):
+	print(f'{name} needs a doctor at {address}')
+
+def drink_more_water():
+	print("need to drink more water")
+
+if __name__ == '__main__':
+	person = Person('Ken', '111 New York Road')
+	person.falls_ill.append(call_a_doctor)  # susbcription
+	person.falls_ill.append(drink_more_water) # subscription
+
+    person.falls_ill.remove(call_a_doctor) # remove the subscription
+	person.catch_a_cold()
+```
+
+### Property Observer
+Tells you when property is actually changed
+
+```python
+class Event(list):
+	def __call__(self, *args, **kwargs):
+		for item in self:
+			item(*args, **kwargs)
+
+class PropertyObservable:
+	def __init__(self):
+		self.property_changed = Event()
+
+class Person(PropertyObservable):
+	def __init__(self, age=0):
+		super().__init__()
+		self._age = age
+	
+	@property
+	def age(self):
+		return self._age
+
+	@age.setter
+	def age(self, value):
+		if self._age == value:
+			return
+
+		self._age = value
+		self.property_changed('age', value)  # this is how you would notify
+
+class TrafficAuthority:
+	def __init__(self, person):
+		self.person = person
+		person.property_changed.append(
+			self.person_changed
+		)
+	
+	def person_changed(self, name_of_property, value):
+		"""This is the method we want to subscirbe to the property change"""
+		if name_of_property == 'age':
+			if value < 16:
+			print("sorry you can't drive")
+		else:
+			print("Okay, you can drive now")
+			self.person.property_changed.remove(
+				self.person_changed
+			)
+
+if __name__ == '__main__':
+	p = Person()
+	ta = TrafficAuthority(p)
+	for age in range(14, 20):
+		print(f'setting age to {age}')
+		p.age = age
+		
 ```
