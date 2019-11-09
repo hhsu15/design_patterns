@@ -2059,3 +2059,196 @@ if __name__ == '__main__':
 		p.age = age
 		
 ```
+
+## State (State machine)
+A pattern in which the object's behavior is determined by its state. An object transitions from one state to another (something needs to trigger a transition)
+
+A formalized construct which managges state and transitions is called a state machine.
+
+```python
+from enum import Enum, auto
+
+
+class State(Enum):
+	OFF_HOOK = auto()  # pick up the phone
+	CONNECTING = auto()
+	CONNECTED = auto()
+	ON_HOLD = auto()
+	ON_HOOK = auto()  # hang up the phone
+
+
+class Trigger(Enum):
+	CALL_DIALED = auto()
+	HUNG_UP = auto()
+	CALL_CONNECTED = auto()
+	PLACED_ON_HOLD = auto()
+	TAKEN_OFF_HOLD = auto()
+	LEFT_MESSAGE = auto()
+
+if __name__ == '__main__':
+	rules = {
+		State.OFF_HOOK: [
+			(Trigger.CALL_DIALED, State.CONNECTING)
+		],
+		State.CONNECTING: [
+			(Trigger.HUNG_UP, State.CONNECTED),
+			(Trigger.CALL_CONNECTED, State.CONNECTED)
+		],
+		State.CONNECTED: [
+			(Trigger.LEFT_MESSAGE, State.ON_HOOK),
+			(Trigger.HUNG_UP, State.ON_HOOK),
+			(Trigger.PLACED_ON_HOLD, State.ON_HOD)
+		],
+		... # you get the idea
+	}
+	
+	start_state = State.OFF_HOOK
+	exit_state = State.ON_HOOK
+	
+	while state != exit_state:
+		print(f'The phone is currently {state}')
+		
+		# loop thru all the options in current state
+		for i in range(len(rules[state])):
+			trigger = rules[state][i][0]
+			print(f'{i}: {trigger}')
+
+		idx = int(input("Select a trigger"))
+		st = rules[state][idx][1]
+		state = st
+	print("We are done using the phone")
+```
+
+## Strategy design pattern
+Essentially it's blueprint which enables the exact behavior of a system to be selected at run-time. Strategy does this through composition.
+
+```python
+from abc import ABC
+from enum import Enum, auto
+
+class ListStrategy(ABC):
+	"""Blueprint for your algo."""
+	def start(self, buffer): pass
+	def end(self, buffer): pass
+	def add_list_item(self, buffer, item): pass
+
+class OutputFormart(Enum):
+	MARKDOWN = auto()
+	HTML = auto()
+
+class MarkdownListStrategy(ListStrategy):
+	def add_list_item(self, buffer, item):
+		buffer.append(f'* {item}\n')
+
+class HtmlStrategy(ListStrategy):
+	def start(self, buffer):
+		buffer.append('<ul>\n')
+
+	def end(self, buffer):
+		buffer.append('</ul>\n')
+	
+	def add_list_item(self, buffer, item):
+		buffer.append(f'  <li>{item}</li>\n')
+
+
+class TextProcesser:
+	def __init__(self, list_strategy=HtmlStrategy()):
+		self.buffer = []
+		self.list_strategy = list_strategy
+
+	def append_list(self, items):
+		ls = self.list_strategy
+		ls.start(self.buffer)
+		for item in items:
+			ls.add_list_item(self.buffer, item)
+		ls.end(self.buffer)
+
+	def set_output_format(self, format):
+		if format = OutputFormat.MARKDOWN:
+			self.list_strategy = MarkDownListStrategy()
+		elif format == OutputFormat.HTML:
+			self.list_stratefy = HtmlListStrategy()
+	
+	def clear(self):
+		self.buffer.clear()
+
+	def __str__(self):
+		return ''.join(self.buffer)
+
+if __name__ == '__main__':
+	items = ['foo', 'bar', 'baz']
+
+	tp = TextProcesser()
+	tp.set_output_format(OutputFormat.MARKDOWN)
+	tp.append_list(items)
+	print(tp)
+	
+	tp.clear()
+	tp.set_output_format(OutputFormat.HTML)
+	tp.append_list(items)
+	print(tp)
+		
+	
+```
+
+## Template design patter
+Similar to Strategy design pattern, but rather than using composition it does it thru inheritance.
+
+```python
+from abc import ABC
+
+class Game(ABC):
+	"""Skeleton of any kind of game"""
+	def __init__(self, number of players):
+		self.number_of_players = number_of_players
+		self.current_player = 0
+
+	def run(self):
+		"""This is the Template method."""
+		self.start()
+		while not self.have_winner:
+			self.take_turn()
+		print(f'Player {self.winnder_player} wins!')
+
+	def start(self): pass
+	
+	@property
+	def have_winner(self): pass
+
+	def take_turn(self): pass
+
+	@property
+	def winner_player(self): pass
+
+class Chess(Game):
+	def __init__(self):
+		super().__init__(2)
+		self.max_turns = 10
+		self.turn = 1
+
+	def run(self):
+		super().run()
+
+	def start(self):
+		print(f'Starting a game of chess with '
+			  f'{self.number_of_players} players')
+
+	@property
+	def have_winnder(self):
+		return self.turn == self.max_turns
+
+	def take_turn(self):
+		print(f'Turn {self.turn} taken by player '
+		      f'{self.current_player}')
+
+		self.turn += 1
+		self.current_palyer = 1 - self.current_player
+	
+	@property
+	def winning_player(self):
+		return self.current_player
+
+chess = Chess()
+chess.run()
+
+```
