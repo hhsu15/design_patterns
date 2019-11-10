@@ -2248,7 +2248,8 @@ class Chess(Game):
 	def winning_player(self):
 		return self.current_player
 
-chess = Chess()
-chess.run()
+if __name__ == '__main__':
+	chess = Chess()
+	chess.run()
 
 ```
