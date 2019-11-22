@@ -2253,3 +2253,62 @@ if __name__ == '__main__':
 	chess.run()
 
 ```
+
+## Vistor
+A component that knows how to traverse a data structure composed of possibly related types.
+
+Intrusive solution example
+```python
+class DoubleExpression:
+	def __init__(self, value):
+		self.value = value
+	
+#	def print(self, buffer):
+#		buffer.append(str(self.value))
+#	
+#	def eval(self):
+#		return self.value
+
+class AdditionExpression:
+	def __init__(self, left, right):
+		self.left = left
+		self.right = right
+	
+#	def print(self, buffer):
+#		buffer.append('(')
+#		self.left.print(buffer)
+#		buffer.append('+')
+#		buffer.right.print(buffer)
+#		buffer.append(')')
+#
+#	def eval(self):
+#		return self.left.eval() + self.right.eval()
+
+class ExpressionPriner:
+	@staticmethod
+	def print(e, buffer):
+		if isinstance(e, DoubleExpression):
+			buffer.append(str(e.value))
+		elif isinstance(e, AdditionExpression):
+			buffer.append('(')
+			ExpressionPriter.print(e.left, buffer)
+			buffer.append('+')
+			ExpressionPrinter.print(e.right, buffer)
+			buffer.append(')')
+
+
+if __name__ == '__main__':
+	e = AdditionExpression(
+		DoubleExpression(1),
+		AdditionExpression(
+			DoubleExpression(2),
+			DoubleExpression(3)
+		)
+	)
+		
+	buffer = []  # this is the element sorta vistor
+	e.print(buffer)
+	print(''.join(buffer), '='., e.eval()) 
+	
+
+```
