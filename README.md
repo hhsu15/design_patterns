@@ -2259,7 +2259,12 @@ A component that knows how to traverse a data structure composed of possibly rel
 
 Intrusive solution example
 ```python
-class DoubleExpression:
+from abc import ABC
+
+class Expression(ABC):
+	pass
+
+class DoubleExpression(Expression):
 	def __init__(self, value):
 		self.value = value
 	
@@ -2269,7 +2274,7 @@ class DoubleExpression:
 #	def eval(self):
 #		return self.value
 
-class AdditionExpression:
+class AdditionExpression(Expression):
 	def __init__(self, left, right):
 		self.left = left
 		self.right = right
@@ -2284,6 +2289,7 @@ class AdditionExpression:
 #	def eval(self):
 #		return self.left.eval() + self.right.eval()
 
+# this is called reflective approach in that you check the instance type
 class ExpressionPriner:
 	@staticmethod
 	def print(e, buffer):
@@ -2296,6 +2302,9 @@ class ExpressionPriner:
 			ExpressionPrinter.print(e.right, buffer)
 			buffer.append(')')
 
+# to propagate so you can use e.print()
+Expression.print = lambda self, b: \
+	ExpressionPrinter.print(self,b)
 
 if __name__ == '__main__':
 	e = AdditionExpression(
@@ -2307,8 +2316,70 @@ if __name__ == '__main__':
 	)
 		
 	buffer = []  # this is the element sorta vistor
-	e.print(buffer)
+    ExpressionPrinter.print(e, buffer)
+	#e.print(buffer)
 	print(''.join(buffer), '='., e.eval()) 
 	
+
+```
+
+#### Double dispatch
+```python
+# use the code from above
+# we ha ve another ExpressionPrinter
+
+class DoubleExpression:
+	def __init__(self, value):
+		self.value = value
+
+	def accept(self, visitor):
+		vistor.visit(self) # this will be redicted to the proper visit method. so for example, if I pass a self (DoubleExpression), I will end up in the visit that expects de(DoubleExpression)
+
+class AdditionExpression:
+	def __init__(self, left, right):
+		self.left = left
+		self.right = right
+	
+	def accept(self, visitor):
+		visitor.visit(self)
+
+class ExpressionPrinter:
+	def __init__(self):
+		self.buffer = []
+
+    @visitor(DoubleExpression)
+	def visit(self, de):
+		self.buffer.append(str(de.value))
+	
+	@visitor(AditionExpression)
+	def visit(self, ae):
+		self.buffer.append('(')
+		self.left.accept(self)
+		self.buffer.append('+')
+		ae.right.accept(self)
+		self.buffer.append(')')
+
+	def __str__(self):
+		return ''.join(self.buffer)
+
+# this is the magic decorator that does the redirection
+_methods = {}
+def _declaring_class(obj):
+	name = _qualname(obj)
+	return name[:name.rfind('.')]
+
+def visitor(arg_type):
+	"""Decorator that creates a visitor method"""
+	def decorator(fn):
+		declaring_class = declaring_class(fn)
+		_methods[(declaring_class, arg_type)] = fn
+		return _visitor_impl
+
+# delegating visitor implementation
+def _visitor_impl(self, arg):
+	"""Actual visitor method implementation"""
+	method = _methods[(_qualname(type(self)), type(arg))]
+	return method(self, arg)
+
 
 ```
