@@ -1,9 +1,12 @@
 # Design Pattern
 
 # SOLID Principles
+
 ## Single Responsibility Principle (SRP or SOP)
+
 Essentially one class should only have a singble resposibility.
 For example:
+
 ```python
 
 class Journal:
@@ -20,7 +23,7 @@ class Journal:
 # ----so far ok, but once we add more things like
     def save(self, filename):
 		pass
-	
+
 	def load(self, filename)
 		pass
 
@@ -35,8 +38,11 @@ class PersistentManager:
 ```
 
 ## Open Close Principle (OCP)
-Basically we should not jump in and modify and existing code that has been working. We should, though, be able to extend it. This will mean inheritance. 
+
+Basically we should not jump in and modify and existing code that has been working. We should, though, be able to extend it. This will mean inheritance.
+
 - We can enforce this principle by using an Enterprise design pattern called `Specification`
+
 ```python
 class Specification:
 	def is_satisfied(self, item):
@@ -73,7 +79,7 @@ class AndSpecification(Specification):
 	def __init__(self, spec1, spec2):
 		self.spec1 = spec1
 		self.spec2 = spec2
-	
+
 	def is_satisfied(self, item):
 		return self.spec1.is_satisfied(item) and \
 		       self.spec2.is_satisfied(item)
@@ -104,27 +110,32 @@ for p in bf.filter(large_blue):
 ```
 
 ## Liskov Substitution Principle (LSP)
+
 If you take inheritance from the base class you should be able to stick to it and everything should still work correctly.
-- The example of breaking this principle could be you inherit a base class of Rectangle for a subclass of Square (which assumes same height and width, if you set the height -> it should also change the width -> if we have a function that caches the width to get expected vaule and then allow you to set height it will no longer work properly due to this side effect. 
+
+- The example of breaking this principle could be you inherit a base class of Rectangle for a subclass of Square (which assumes same height and width, if you set the height -> it should also change the width -> if we have a function that caches the width to get expected vaule and then allow you to set height it will no longer work properly due to this side effect.
 
 ## Interface Segregation Principle (ISP)
-The idea is you do not want to stick too many methods into an interface. So instead of having a base class that does many things that might not be applicable to the subclass, we should create more granular classes for each purpose. 
-- For example 
+
+The idea is you do not want to stick too many methods into an interface. So instead of having a base class that does many things that might not be applicable to the subclass, we should create more granular classes for each purpose.
+
+- For example
+
 ```python
 # instead of having a base class defining the interface like this
 class Machine:
-	
+
 	@abstractmethod
 	def scan(self):
 		pass
-	
+
 	@abstractmethod
 	def print(self):
 		pass
 
 # consider using these
 class Printer:
-	
+
 	@abstractmethod
 	def print(self):
 		pass
@@ -135,17 +146,17 @@ class Scanner:
 		pass
 
 class MultiFunctionDevice(Printer, Scanner):
-	
+
 	@abstractmethod
 	def print(self):
 		pass
-    
+
 	@abstractmethod
 	def scan(self):
 		pass
 
 class CannonMultiPrinter(MultiFunctionDevice):
-	
+
 	def print(self):
 		do something
 
@@ -154,12 +165,15 @@ class CannonMultiPrinter(MultiFunctionDevice):
 ```
 
 ## Dependency Inversion Principle
+
 High level module should not depend on low level module. It should depend on abstract interface rather than implementation
+
 - high level module - uses some other functions closer to the hardware. Say, something like InspectRelationship
 - low level module - for example module dealing with storage, say you a class called Relationships that stores the relations as a list
 - You should not have InspectRelationship depend on Relationships because if Relasionships changes the way the data is stored then InspectRelationship will break.
 
 Example
+
 ```python
 # instead of having something like this:
 class Relationships: # low level module
@@ -191,7 +205,9 @@ class InspectRelationship: # so now this is only depending on an abstraction
 ```
 
 # Gamma Categorization
+
 Design Patterns are typically split into three categories
+
 - Creational Patterns (Builder Patterns)
   - think about contruction of objects
 - Structure Patterns
@@ -201,76 +217,78 @@ Design Patterns are typically split into three categories
   - they are all different
 
 ## Builder Desgin Pattern
+
 Eseentially to solve the problem if you have a complex constructor
 Example, you want to construct an HTML paragraph. Rather than just join all the strings with tags, let's outsource to a beautiful builder that can build complicated html.
 Example:
+
 ```python
 class HtmlElement:
     indent_size = 2
-    
+
     def __init__(self, name='', text=''):
         self.text = text
         self.name = name
         self.elements = []
-    
+
     def __str(self, indent):
         """implementation of formatting the html element"""
         lines = []
         i = ' ' * (indent * self.indent_size)
         lines.append(f'{i}<{self.name}>')
-        
+
         if self.text:
             i1 = ' ' * ((indent + 1) * self.indent_size)
             lines.append(f'{i1}{self.text}')
-    
+
         for e in self.elements:
             # this is recursion part, append each string representation of an element
             lines.append(e.__str(indent + 1))
-        
+
         lines.append(f'{i}</{self.name}>')
         return '\n'.join(lines)
-    
+
     def __str__(self):
         """for the print function"""
         return self.__str(0)
-    
+
     @staticmethod
     def build(name):
         """Provide another way to start the builder"""
         return HtmlBuilder(name)
-    
+
 class HtmlBuilder:
     """This is how you can construct a builder"""
     def __init__(self, root_name):
         self.root_name = root_name
         self.__root = HtmlElement(root_name)
-        
+
     def add_child(self, child_name, child_text):
         self.__root.elements.append(
         HtmlElement(child_name, child_text)
         )
-        
+
     def add_child_fluent(self, child_name, child_text):
-        """This is very neat! 
+        """This is very neat!
         By returning self, you allow chainning these things
         """
         self.__root.elements.append(
         HtmlElement(child_name, child_text)
         )
         return self
-        
-    
+
+
     def __str__(self):
         """This is the cool part!
-        when you print the builder obj, it calling the string representation 
+        when you print the builder obj, it calling the string representation
         of HtmlElement
         """
         return str(self.__root)
-    
+
 # builder = HtmlBuilder('ul') # samething
 builder = HtmlElement.build('ul')
 builder.add_child_fluent('li', 'Kyle').add_child_fluent('li', 'Kyly')
- """  
+ """
   <ul>
     <li>
       Kyle
@@ -284,21 +302,24 @@ builder.add_child_fluent('li', 'Kyle').add_child_fluent('li', 'Kyly')
 ```
 
 ### Builder Facets
-You can use a base builder class and jump between sub-builder classes using certain tricks. Essentially by 
-  - passing the object around using fluent interface
-  - use @property to create sub-class object
-Example: 
+
+You can use a base builder class and jump between sub-builder classes using certain tricks. Essentially by
+
+- passing the object around using fluent interface
+- use @property to create sub-class object
+  Example:
+
 ```python
 class Person:
     def __init__(self):
         self.street_address = None
         self.postcode = None
         self.city = None
-        
+
         self.company_name = None
         self.position = None
         self.annual_income = None
-        
+
     def __str__(self):
         return f'Address {self.street_address}, {self.postcode}, {self.city}' + \
                f'Employed at {self.company_name} as a {self.position} earning {self.annual_income}'
@@ -306,65 +327,65 @@ class Person:
 class PersonBuilder:
     """Show off a pretty cool trick here
     We have the PersonBilder as base class which allows to you switch the subbuilders
-    
+
     """
     def __init__(self, person=Person()): # a little trick here to create a Person but also allow a already built person
         self.person = person
-        
+
     @property
     def works(self):
         """by calling this property you create a JobBuilder
         the trick here is you pass the 'self.person'
         when it goes JobBuilder it comes back to PersonBuilder
-        This allows to you use the base class to toggle the subclasses 
+        This allows to you use the base class to toggle the subclasses
         """
         return PersonJobBuilder(self.person)
-    
+
     @property
     def lives(self):
         """by calling this property you create a JobBuilder
         the trick here is you pass the 'self.person'
         when it goes JobBuilder it comes back to PersonBuilder
-        This allows to you use the base class to toggle the subclasses 
+        This allows to you use the base class to toggle the subclasses
         """
         return PersonAddressBuilder(self.person)
-        
+
     def build(self):
         return self.person # so you return
-    
+
 
 class PersonJobBuilder(PersonBuilder):
     def __inti__(self, person):
         super().__init__(person)
-        
+
     def at(self, company_name):
         self.person.company_name = company_name
         return self  # make it fluent interface
-    
+
     def as_a(self, position):
         self.person.position = position
         return self
-    
+
     def earning(self, annual_income):
         self.person.annual_income = annual_income
         return self
-    
+
 class PersonAddressBuilder(PersonBuilder):
     def __inti__(self, person):
         super().__init__(person)
-        
+
     def at(self, street_address):
         self.person.street_address = street_address
         return self  # make it fluent interface
-    
+
     def with_postcode(self, postcode):
         self.person.postcode = postcode
         return self
-    
+
     def in_city(self, city):
         self.person.city = city
         return self
-    
+
 pb = PersonBuilder()
 person = pb\
     .lives\
@@ -375,10 +396,12 @@ person = pb\
         .as_a("Data Engineer")\
         .earning(100000)\
     .build()
-print(person)  # Address 1123 street, None, TokyoEmployed at Bloomberg as a Data Engineer earning 100000  
+print(person)  # Address 1123 street, None, TokyoEmployed at Bloomberg as a Data Engineer earning 100000
 
 ```
+
 - By the way, if we do not want to violate the Open Close Principle (Open to extension, close to modification) - since we have to modify the base PersonBuilder everytime we make a new class - there is an alternative, like so:
+
 ```python
 # An alternative way using inheritance so you do not violate Open Close Priciple
 
@@ -387,55 +410,55 @@ class Person:
         self.street_address = None
         self.postcode = None
         self.city = None
-        
+
         self.company_name = None
         self.position = None
         self.annual_income = None
-        
+
     @staticmethod
     def new():
         return PersonBuilder()
-        
+
     def __str__(self):
         return f'Address {self.street_address}, {self.postcode}, {self.city}' + \
                f'Employed at {self.company_name} as a {self.position} earning {self.annual_income}'
 
 class PersonBuilder:
-    
+
     def __init__(self): # a little trick here to create a Person but also allow a already built person
         self.person = Person()
-        
-    
+
+
     def build(self):
         return self.person
 
-    
+
 class PersonAddressBuilder(PersonBuilder):
     def at(self, street_address):
         self.person.street_address = street_address
         return self  # make it fluent interface
-    
+
     def with_postcode(self, postcode):
         self.person.postcode = postcode
         return self
-    
+
     def in_city(self, city):
         self.person.city = city
         return self
-    
+
 class PersonJobBuilder(PersonAddressBuilder):
     def at_company(self, company_name):
         self.person.company_name = company_name
         return self  # make it fluent interface
-    
+
     def as_a(self, position):
         self.person.position = position
         return self
-    
+
     def earning(self, annual_income):
         self.person.annual_income = annual_income
         return self
-    
+
 # and you can go on and on....
 
 pb = PersonJobBuilder()
@@ -446,18 +469,21 @@ me = pb\
     .at_company("BBG")\
     .as_a("Engineer")\
     .earning(10000000)\
-    .build() 
-    
+    .build()
+
 print(me)    #Address New Jersey, 0000, PrincetonEmployed at BBG as a Engineer earning 10000000
 
 ```
 
 ## Factories
+
 A component responsible solely for the wholesale(not piecewise) creation of objects
 
 ### Factory Methods
+
 Methods (typically staticmethods) that create objects
 Example:
+
 ```python
 from math import *
 from enum import Enum
@@ -465,15 +491,15 @@ from enum import Enum
 class CoordinateSystem(Enum):
     CARTESIAN = 1
     POLAR = 2
-    
+
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        
+
     def __str__(self):
         return f'x: {self.x}, y: {self.y}'
-        
+
     # instead of using this...
 #     def __init__(self, a, b, system=CordinateSystem.CARTESIAN):
 #         if system = CordinateSystem.CARTESIAN:
@@ -482,12 +508,12 @@ class Point:
 #         elif system == CoordinateSystem.POLAR:
 #             self.x = a * cos(b)
 #             self.y = a * sin(b)
-    
+
     @staticmethod
     def new_cartesian_point(x, y):
         """Factory method"""
         return Point(x, y)
-        
+
     @staticmethod
     def new_polar_point(rho, theta):
         """Factory method"""
@@ -499,13 +525,17 @@ print(p)
 print(p2)
 
 ```
+
 ### Factory
+
 Factory is simply a separate class that manages all the factory methods.
 At the core, it's a class that allows to manufacture objects.
+
 - so in above example, it can be done as
+
 ```python
 class PointFactory:
-	
+
 	@staticmethod
 	def new_cartesian_point(x, y):
 		pass
@@ -515,8 +545,11 @@ class PointFactory:
 		pass
 
 ```
+
 ### Abstract Factory
+
 Make the factory class abstract class to build the hierarchy of the sub factory class
+
 ```python
 class HotDrinkFactory(AB):
 	def prepare(self, amt):
@@ -536,19 +569,24 @@ class CoffeeFactory(HotDrinkFactory):
 ```
 
 ## Prototype
+
 A partially or fully initialized object that you copy and make use of.
 Prototype reiterate existing design. Essentially we take advantage of some existing design and build/customize it.
+
 ```python
 # key here is copying the object. In order to custom the object you copy properly, use deepcopy. Something like
 john = Persob('John', Address('tokyo', 'Japan')
 jane = copy.deepcopy(john)
 jane.name = 'Jane'
 jane.address.city = 'osaka'
-# rather than creating a jane Person object from scrach you can use Proptotype 
+# rather than creating a jane Person object from scrach you can use Proptotype
 # notice if you use copy.copy (shallow copy) you will have have the name attribute as Jane but the Address will still be reference so you will have it both for john and jane which won't be what you want.
 ```
+
 ### Use Factory for Prototype
+
 A nice way to make prototype easier is to use Factory. Example
+
 ```python
 # use factory for prototype
 import copy
@@ -557,42 +595,44 @@ class Employee:
     def __init__(self, name, address):
         self.name = name
         self.address = address
-    
+
     def __str__(self):
         return f'{self.name} works at {self.address}'
-    
+
 class Address:
     def __init__(self, street, city):
         self.street = street
         self.city = city
-        
+
     def __str__(self):
         return f'{self.street}, {self.city}'
-    
-    
+
+
 class EmployeeFactory:
     main_office_employee = Employee('', Address('main street','Princeton'))
     ny_office_employee = Employee('', Address('manhatan', 'NY'))
-    
+
     @staticmethod
     def new_main_office_employee(name):
         new_main_emp = copy.deepcopy(EmployeeFactory.main_office_employee)
         new_main_emp.name = name
         return new_main_emp
-    
+
     @staticmethod
     def new_ny_office_employee(name):
         new_ny_emp = copy.deepcopy(EmployeeFactory.ny_office_employee)
-        new_ny_emp.name = name 
+        new_ny_emp.name = name
         return new_ny_emp
-    
+
 kyle = EmployeeFactory.new_main_office_employee("Kyle")
 jess = EmployeeFactory.new_ny_office_employee("Jess")
 
 ```
 
 ## Singleton
-For some components it only makes sense to have on ein the system such as dataybase repositoy or object factory. 
+
+For some components it only makes sense to have on ein the system such as dataybase repositoy or object factory.
+
 ```python
 
 class Database:
@@ -602,7 +642,9 @@ class Database:
             cls._instance = super(Database, cls).__new__(cls,*args, **kwargs)
         return cls._instance
 ```
+
 ### Singleton decorator
+
 ```python
 # However this does not prevent __init__ gets called multiple times, which is half baked,
 # a better approach would be using a decorator
@@ -625,43 +667,46 @@ class Database:
 ```
 
 ### Singleton metaclass
+
 ```python
 class Singleton(type):
     _instances = {}
-    
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls)\
                 .__call__(*args, **kwargs)
         return cls._instances[cls]
-    
+
 class Database(metaclass=Singleton):
     def __init__(self):
         print("Loading database")
-        
+
 d1 = Database()
-d2 = Database 
+d2 = Database
 
 d1 is d2 # => True
 
 ```
 
 ### Monostate
+
 A variation of Singleton. You have a static state but you allow them to be overriden. The trick is you always referece the same object
+
 ```python
 class CEO:
     # create a static variable for the attributes
     _shared_state = {
         'name': 'John',
-        'age': 55        
+        'age': 55
     }
-    
+
     def __init__(self):
         self.__dict__ = CEO._shared_state  # you are always refencing the same set of attributes
-        
+
     def __str__(self):
         return f'{self.name}, {self.age}'
-    
+
 c1 = CEO()
 print(c1)
 c2 = CEO()
@@ -673,14 +718,16 @@ print(c1)
 ```
 
 ## Adapter
-Getting the interface you want from the interface you have - the inbetween component. 
+
+Getting the interface you want from the interface you have - the inbetween component.
 Example:
-```python 
+
+```python
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        
+
 def draw_point(p):
     print('.', end='')
 
@@ -691,7 +738,7 @@ class Line:
     def __init__(self, start, end):
         self.start = start
         self.end = end
-        
+
 class Rectangle(list):
     def __init__(self, x, y, width, height):
         super().__init__()
@@ -700,44 +747,44 @@ class Rectangle(list):
         self.append(Line(Point(x, y), Point(x, y + height)))
         self.append(Line(Point(x, y + height), Point(x + width, y + height)))
 
-        
+
 # here is the adapter which is an "in-btween component"
 class LineToPointAdapter:
     cache = {}  # so we do not have to create a new object every time
-    
+
     def __init__(self, line):
         self.h = hash(line)  # use this as unique key
         if self.h in self.cache:
             return
-        
+
         super().__init__()
-        
+
         print(f'Generating points for line'
               f'[{line.start.x}, {line.end.y}] ->'
               f'[{line.end.x}, {line.end.y}]'
              )
-        
+
         left = min(line.start.x, line.end.x)
         right = max(line.start.x, line.end.x)
         top = min(line.start.y, line.end.y)
         bottom = min(line.start.y, line.end.y)
-        
+
         points = []
-        
+
         if right - left == 0:
             for y in range(top, bottom):
                 points.append(Point(left, y))
         elif line.end.y - line.start.y == 0:
             for x in range(left, right):
                 points.append(Point(x, top))
-                
+
         self.cache[self.h] = points
-        
+
     def __iter__(self):  # so you can interate the obj like a list
         return iter(self.cache[self.h])
-        
-        
-        
+
+
+
 def draw(rcs):
     print("\n\n--drawing some stuff---\n")
     for rc in rcs:
@@ -745,22 +792,24 @@ def draw(rcs):
             adapter = LineToPointAdapter(line)
             for p in adapter:
                 draw_point(p)
-                
+
 if __name__ == '__main__':
     rcs = [Rectangle(1, 1, 10, 10),
          Rectangle(3, 3, 6, 6)]
-    
+
     draw(rcs)
-    
-    draw(rcs) # notice send time it won't generate those points 
+
+    draw(rcs) # notice send time it won't generate those points
               #becasue they have been created and stored in cache
 
 ```
 
 ## Bridge
+
 Bridge pattern prevents a "Cartesian product" complexity explosion. For example, if you would normally create a combinations of hierarchy scenerios where it ends up being 2*2, 4*4 due to the number of senerios
 
 Example:
+
 ```python
 # circle square
 # vector raster
@@ -781,7 +830,7 @@ class RasterRenderer(Renderer):
 		def render_circle(self, radius):
 			print(f"Drawing pixels for a circle of radius {radius}')
 
-class Shape:  # this the Bridge pattern, which connects two hierachy with different classes with a parameter (in this case renderer)and you have the connection between each other  
+class Shape:  # this the Bridge pattern, which connects two hierachy with different classes with a parameter (in this case renderer)and you have the connection between each other
 	def __init__(self, renderer):
 		self.renderer = renderer
 
@@ -809,9 +858,11 @@ circle.draw()
 ```
 
 ## Composite
+
 Composition lets us make compound objects. E.g., A Person object composes Address object and Job object. Or an object that is a group of other objects. Composite pattern is a mechanisim for treating individual objects and compositions of objects in an uniform manner
 
 Example:
+
 ```python
 class GraphicObject:
 	def __init__(self, color=None):
@@ -831,7 +882,7 @@ class GraphicObject:
 		items.append(f'{self.name}\n')
 		for child in self.childrem:
 			child._print(items, depth + 1)
-	
+
 	def __str__(self):
 		# use recursive operation
 		items = []
@@ -866,10 +917,11 @@ print(drawing)
    *Group
    **BlueCircle
    **BlueSquare
-   """	
+   """
 ```
 
 ### Example 2
+
 ```python
 from abc import ABC
 from collections.abc import Iterable
@@ -890,16 +942,16 @@ class Neuron(Connectable):
 		self.name = name
 		self.inputs = []
 		self.outputs = []
-	
+
 	def __str__(self):
 		return f'{self.name}' \
 		       f'{len(self.inputs)} inputs, ' \
 			   f'{len(self.outputs)} outputs'
-    
+
 	def __iter__(self):
 	    "Turn a scala value into a collection"
 		yield self
-	
+
 	#def connect_to(self, other):
 	#   self.outputs.append(other)
 	#	self.inputs.append(self)
@@ -915,12 +967,12 @@ class NeuronLayer(list, Connectable):
 	    return f'{self.name} with {len(self)} neurons'
 
 if __name__ = '__main__':
-    # now imagine you have to connect two neurons but you don't want to end up having to write all the combinations 
+    # now imagine you have to connect two neurons but you don't want to end up having to write all the combinations
     neuron1 = Neuron('n1')
 	neuron2 = Neuron('n2')
 	layer1 = NeuronLayer('L1', 3)
 	layer2 = NeuronLayer('L2', 3)
-	
+
     neuron1.connect_to(neuron2)
 	neuron1.connect_to(layer1)
 	layer1.connect_to(neuron2)
@@ -933,25 +985,27 @@ if __name__ = '__main__':
 
 
 ```
-- Summary 
-  - Objects can use other objects via inheritance/composition
-  - Some composed and singular objects need similar/identical behaviors 
-  - Composite design pattern lets us treat both types of objects uniformly
-  - Python supports iteration with __iter__  and Iterable ABC
-  - A single object can make itself iterable by yielding `self` from __iter__
 
+- Summary
+  - Objects can use other objects via inheritance/composition
+  - Some composed and singular objects need similar/identical behaviors
+  - Composite design pattern lets us treat both types of objects uniformly
+  - Python supports iteration with **iter** and Iterable ABC
+  - A single object can make itself iterable by yielding `self` from **iter**
 
 ## Command pattern
+
 Perform and record certain operations
 
 Example:
+
 ```python
 class BankAcount:
 	OVERDRAFT_LIMIT = -500
 
 	def __init__(self, balance=0):
 		self.balance = balance
-	
+
 	def deposit(self, amount):
 		self.balance += amount
 		print(f'Deposited {amount}'
@@ -969,7 +1023,7 @@ class BankAcount:
 	def __str__(self):
 		return f'Balance = {self.balance}'
 
-"""You could, use these methods direcly and they will work, 
+"""You could, use these methods direcly and they will work,
 However, in order to have records for these operations we can use
 the "Command" pattern. One good side effect is you will have the ability
 to "undo" the operation
@@ -979,9 +1033,9 @@ to "undo" the operation
 class Command(ABC):
 	def __init__(self):
 		self.success = False
-	
+
 	def invoke(self):
-		pass	
+		pass
 
 	def undo(self):
 		pass
@@ -990,7 +1044,7 @@ class BankAcountCommand(Command):
 	class Action(Enum):
 		DEPOSIT=0
 		WITHDRAW = 1
-	
+
 	def __init__(self, account, action, amount):
 		super().__init__()
 		self.amount = amount
@@ -1016,7 +1070,7 @@ class BankAcountCommand(Command):
 class CompositBankAccountCommand(Command, list):
 	"""Composite command
 	It's a Command with the same interface and it's also a list
-	
+
 	"""
 	def __init__(self, items=[]):
 		super().__init__()
@@ -1035,12 +1089,12 @@ class CompositBankAccountCommand(Command, list):
 class MoneyTransferCommand(CompositeBankAccountCommand):
 	def __init__(self, from_acct, to_acct, amount):
 		super().__init__([
-		  BankAccountCommand(from_acct, 
+		  BankAccountCommand(from_acct,
 		  					BankAccount.Action.WITHDRAW, amount),
 		  BankAccountCommand(to_acct,
 		  					BankCoountCommand.Action.DEPOSIT, amount)
 		])
-	
+
 	def invoke(self):
 		ok = True
 		for cmd in self:
@@ -1062,14 +1116,14 @@ class TestSuite(unittest.TestCase):
 	deposit2 = BankAccountCommand(
 		ba, BankAccountCommand.Action.DEPOSIT, 50
 	)
-     
+
 	composite = CompositeBankAccountCommand([deposit1, deposit2])
 	composite.invoke()
 	print(ba)
 
 	composite.undo()
 	print(ba)
-    
+
 	test_transfer(self):
 		ba1 = BankAccount(100)
 		ba2 = BankAccount()
@@ -1104,6 +1158,7 @@ if __name__ == '__main__':
 ```
 
 ## Decorator
+
 Ficilitates the addition of behaviors to individual objects without inheriting from them. Python decorator is one example.
 
 ```python
@@ -1112,7 +1167,7 @@ Ficilitates the addition of behaviors to individual objects without inheriting f
 class FileWithLogging:
     def __init__(self, file):
         self.file = file
-	
+
 	def writelines(self, strings):
 	    '''This is my custom method '''
 		self.file.writelines(strings)
@@ -1123,7 +1178,7 @@ class FileWithLogging:
 
 	def __next__(self):
 		self.file.__next__()
-    
+
 	'''From below is what's cool here! We can save some time by using this dynamic programing.
 	Essentially whatever methods we want to use from the underlying objects we use the following methods to delagate them to. For example, the "write" method'''
 	def __getattr__(self, item):
@@ -1145,9 +1200,12 @@ if __name__ == '__main__':
 	file.write('testing')
 	file.close()
 ```
+
 ## Facade (pronouce like fasade)
+
 Provide nice interface that will just work. Users don't need to know the implementation details
 Example:
+
 ```python
 class Buffer:
 "Low level implementation api"
@@ -1155,14 +1213,14 @@ class Buffer:
 		self.width = width
 		self.height = height
 		self.buffer = [' '] * (width * height)  # create buffer as placeholder
-	
+
 	def __getitem__(self, item):
 		return self.buffer.__getitem__(item)
 
 	def write(self, text):
 		self.buffer += text
 
-	
+
 class Viewport:
 	def __init__(self, buffer=Buffer()):
 		self.buffer = buffer
@@ -1181,10 +1239,10 @@ class Console:
 		self.current_viewport = Viewport(b)
 		self.buffers = [b]
 		self.viewports = [self.current_viewport]
-	
+
 	def write(self, text):
 		return self.current_viewport.buffer.write(text)
-		
+
 	def get_char_at(self, index):
 		return self.current_viewport.get_char_at(index)
 
@@ -1195,13 +1253,16 @@ if __name__ = '__main__':
 ```
 
 ## Flyweight design patter
+
 A space optimization technique that lets us use less memory by storing externally the data associated with simliar objects.
 
 The way to do it is essentially:
-  - store common data externally
-  - specify an index or a reference into the external data store
-  - define the idea of "ranges" on homegeneous collections and store data related to those ranges
-Example:
+
+- store common data externally
+- specify an index or a reference into the external data store
+- define the idea of "ranges" on homegeneous collections and store data related to those ranges
+  Example:
+
 ```python
 import string
 import random
@@ -1224,11 +1285,11 @@ class User2:
 			else:
 				self.strings.append(s)
 				return len(self.strings) - 1
-		
+
 		# this will give you two indices for your name. One for first name, one for last name
 		self.names = [get_or_add(x)
 					  for x in full_name.split(' ')]  # loop thru first name and last name
-	
+
 	def __str__(self):
 		return ' '.join([self.strings[x] for x in self.names])
 
@@ -1315,9 +1376,11 @@ if __name__ == '__main__':
 ```
 
 ## Proxy design pattern
+
 A class that functions as an interface to a particular resource. That resource may be remote, expensive to construct, or may require logging or some other added functionalities.
 
 A typical proxy class is "protection proxy". For example, for access control
+
 ```python
 class Car:
 	def __init__(self, driver):
@@ -1380,27 +1443,32 @@ class LazyBitMap:
 
 if __name__ = '__main__':
 	bmp = BitMap('something.jpg') # this will load the image even though you don't draw it which can be expensive
-	draw_image(bmp) 
-    
+	draw_image(bmp)
+
 	# use the virtual proxy
 	bmp = LazyBitMap(something.jpg)
 	draw_image(bmp)
-	draw_image(bmp) # if you draw the same thing twice you will see it only gets load once. 
+	draw_image(bmp) # if you draw the same thing twice you will see it only gets load once.
 
 ```
+
 #### Proxy VS. Decorator
+
 Proxy provides an identical interface to the underlying components; decorator provides an enhanced interface
 
 ## Chain of Respobsibility design patter
+
 A chain of components who all get a chacne to process a command or a query, optionally having default processing implementation and a ability to terminate the processing chain.
+
 - Example using chain of reference (linked list)
+
 ```python
 class Creature:
 	def __init__(self, name, attack, defence):
 		self.name = name
 		self.attack = attack
 		self.defense = defense
-	
+
 	def __str__(self):
 		return f'{self.name} ({self.attack})/{self.defence})'
 
@@ -1408,8 +1476,8 @@ class CreatureModifier:
     """Base class"""
 	def __init__(self, creature):
 		self.creature = creature
-		self.next_modifier = None  # This is where we build the chain so you can pick up multiple modifier on a creature. 
-    
+		self.next_modifier = None  # This is where we build the chain so you can pick up multiple modifier on a creature.
+
 	def add_modifier(self, modifier):
 	    """To provide the chain effect"""
 		if self.next_modifier: # if we already have a modifier ofcouse we will call the next modifier (recursive here)
@@ -1421,7 +1489,7 @@ class CreatureModifier:
 		"""becasue this is a base class, we are relying on the sub class to handle"""
 		if self.next_modifier:
 			self.next_modifier.handle()
-   
+
 class DoubleAttackModifier(CreatureModifier):
 	def handle(self):
 		print(f'Doubling {self.creature.name}' 's attak')
@@ -1446,11 +1514,11 @@ class NoBonusesModifier(CreateModifier):
 if __name__ == '__main__':
 	goblin = Creature("Goblin", 1, 1)
 	print(goblin)
-    
+
 	# here is the idea, you have a root top level element
 	root = CreatureModifier(goblin)  # this is the base abstract class which does not do anything
 	# what we can do, is to apply custom modifier object under the root.
- 
+
     # root.add_modifier(NoBonusesModifier(goblin)) # if you apply this modifier then no other modifier will be applied. This will essentially stop the chain of responsibilities
 	root.add_modifier(DoubleAttackModifier(goblin))
 	root.add_modifier(DoubleAttackModifier(goblin)) # apply same modifier twice
@@ -1461,17 +1529,20 @@ if __name__ == '__main__':
 ```
 
 ### Command Query Separation (CQS)
+
 To allow you to invoke the chain of responsiblities dynamically..
 it's quite complex and we are using the following design patterns
+
 - Event Broker (observer design pattern)
 - CQS
-So it works like this,
+  So it works like this,
 - you have a Event which is a list of functions
 - When you apply a modifier it adds the function to the event
-- "Game" object keeps track of the events(queries) 
+- "Game" object keeps track of the events(queries)
 - When you print the creature object it essentially triggers all all queries (event) by calling `attack` and `defense` property
 - you can also apply the scope using `with` to limit the effect of the modifier
 - Example using centralized construct:
+
 ```python
 class Event(list):
     """Event is a list of functions you can call"""
@@ -1497,7 +1568,7 @@ class Game:
     def perform_query(self, sender, query):
 	    """Call a list of functions"""
 		self.queries(sender, query)
-		
+
 class CreatureModifier(ABC):
 	def __init__(self, game, creature):
 		self.game = game
@@ -1532,14 +1603,14 @@ class Creature:
 		q = Query(self.name, WhatToQuery.ATTACK, self.initial_attack)
 		self.game.perform_query(self, q)
 		return q.value
-	
+
 	@property
 	def defense(self):
 		#query
 		q = Query(self.name, WhatToQuery.DEFENSE, self.initial_defense)
 		self.game.perform_query(self, q)
 		return q.value
-    
+
 	def __str__(self):
 		return f'{self.name} ({self.attack}/{self.defense})'
 
@@ -1547,7 +1618,7 @@ if __name__ == '__main__':
 	game = Game()
 	goblin = Creature(game, 'Strong Goblin', 2, 2)
 	print(goblin)
-    
+
 	with DoubleAttackModifier(game, goblin): # as soon as it's built, the DoubleAttackModifier is going to intercept the goblin and change it's value
 	    print(goblin) # should print "Strong Goblin (4/2)
 
@@ -1555,10 +1626,12 @@ if __name__ == '__main__':
 ```
 
 ## Interpreter
-Interpreper design pattern. Make them object oriented structure. 
+
+Interpreper design pattern. Make them object oriented structure.
 Mainly lex anbd parse
 
 Example:
+
 ```python
 class Token:
 	class Type(Enum):
@@ -1587,10 +1660,10 @@ def lex(input):
 
    	elif input[i] == '(':
 		result.append(Token(Token.Type.LPAREN, '('))
-   	
+
 	elif input[i] == ')':
 		result.append(Token(Token.Type.RPAREN, ')'))
-    
+
 	else:
 	    # get the integer
 		digits = [input[i]] # start with current digit
@@ -1625,7 +1698,7 @@ class BinaryExpression:
 			return self.left.value + self.right.value # left plus right
 		elif self.type = self.Type.SUBSTRACTION:
 			return self.left.value - self.right.value # left minus right
-		
+
 
 def parse(tokens):
 	"""Traverse the tokens and parse the elements"""
@@ -1639,7 +1712,7 @@ def parse(tokens):
 		if token.type == Token.Type.INTEGER:
 			integer = Integer(int(token.text))
 			if not have have_lhs:
-				result.left = integer 
+				result.left = integer
 				have_lhs = True # now I have left hand side
 
 			else:
@@ -1648,7 +1721,7 @@ def parse(tokens):
 			result.type = BinaryExpression.Type.ADDITION
 		elif token.type = Token.Type.MINUS:
 			result.type = BinaryExpression.Type.SUBSTRACTION
-        
+
 		# this is the difficult part when you see parathesis
 		# a recursive operation which basically
 		elif toke.type = Token.Type.LPAREN:
@@ -1657,7 +1730,7 @@ def parse(tokens):
 				if tokens[j].type = Token.Type.RPAREN: # advance until you find the right parenthesis
 					break
 				j += 1
-			
+
 			subexpression = tokens[i+1:j] # parse the subexpressio within the parenthesises
 			element = parse(subexpression) # pass the subex to parse recursively. Remember "parse()" returns BinaryExpression
 			if not have_lfs:
@@ -1681,6 +1754,7 @@ if __name__ = '__main__':
 ```
 
 ## Iterator design pattern
+
 An object that facilitates the traversal of a datastructure
 
 Normally, you woukd implement the `__iter__` with `__next__` protocal however in reality it can result in ugly and messy code, so here is an example of a nice and readable implementation (without the custom iter object
@@ -1723,13 +1797,13 @@ def traverse_in_order(root):
 			yield current
 			for right in traverse(current.right):
 				yield right
-	
+
 	for node in traverse(root):
 		yield node
 
 
 if __name__ = '__main__':
-	# in-order 
+	# in-order
 
 	root = Node(1, Node(2), Node(3)) # in-order will give you 2, 1, 3
 
@@ -1739,6 +1813,7 @@ if __name__ = '__main__':
 ```
 
 # Array Backed Properties
+
 This is very interesting design. Essentially rather than normallyhow would you set up the attributes and make properties for calcuated result, you create a list that stores the values of those property which allows you to be more easily manage the computation.
 
 ```python
@@ -1752,14 +1827,14 @@ class Creature:
 		#self.strength = 10
 		#self.agility = 10
 		#sefl.intelligence = 10
-        
+
 		self.stats = [10, 10, 10]  # just one attribute
 
 	@property
 	def sum_of_stats(self):
 		# return self.strength + self....... # this is annoying
 		return sum(self.stats) # now this is much easier
-	
+
 	@property
 	def max_of_stats(self):
 		return max(self.stats)
@@ -1767,12 +1842,12 @@ class Creature:
 	@property
 	def avg_of_stats(self):
 		return self.sum_of_stats / len(self.stats)
-    
+
 	@property
 	def strength(self):
 		"""So you can still access these as properties"""
 		return self.stats[Creature._strength]
-	
+
 	@strength.setter
 	def strength(self, value):
 		self.stats[Creature._strength] = value
@@ -1782,6 +1857,7 @@ class Creature:
 ```
 
 ## Mediator
+
 In a system the components can be in and out at anytime and therefore it does not make senset to directly reference each one, Like chat room. A chat midiator will connect everyone in the same room and allow everyone to send messages to one another
 
 - create the mediator and have each object in the system refer to it (e.g., in a property)
@@ -1789,6 +1865,7 @@ In a system the components can be in and out at anytime and therefore it does no
 - mediator has functions the components can call (like broadcast)
 - components have functions mediator can call (like receive)
 - Evenbt processing libraries make communication easier to implement (i.e., the components will subscribe the functions to the event and you can just fire the events)
+
 ```python
 
 class Person:
@@ -1814,13 +1891,13 @@ class Person:
 class ChatRoom:
 	def __init__(self):
 		self.people = []
-	
+
 	def join(self):
 		join_msg = f'{person.name} joins the chat'
 		self.broadcast('room', join_msg)
 		person.room = self
 		self.people.append(person)
-	
+
 	def broadcast(self, source, msg):
 		for p in self.people:
 			if p.name != source:
@@ -1852,6 +1929,7 @@ if __name__ == '__main__':
 ```
 
 ### Mediator with Events
+
 ```python
 
 class Event(list):
@@ -1865,7 +1943,7 @@ class Game:
 	"""Mediator."""
 	def __init__(self):
 		self.events = Event()
-	
+
 	def fire(self, args):
 		self.events(args)
 
@@ -1911,10 +1989,11 @@ if __name__ = "__main__":
 
 ```
 
-
 ## Memento design pattern
+
 Memento takes a snapshot of a state which will allow you to restore the system to that state. Memento is simply a token/handle class with no functions of its own.
 We can use memento to perform undo and redo functions
+
 ```python
 
 class BankAccount:
@@ -1967,10 +2046,11 @@ if __name__ == '__main__':
 	ba.undo() # will give you balance of 150
     ba.undo() # will give you balance of 100
 	ba.redo() # will give balance back to 150
-		
+
 ```
 
-## Observer 
+## Observer
+
 This is probablly the most popular design pattern. You want to observe certain events and get alerted when the event occurs.
 
 ```python
@@ -2004,6 +2084,7 @@ if __name__ == '__main__':
 ```
 
 ### Property Observer
+
 Tells you when property is actually changed
 
 ```python
@@ -2020,7 +2101,7 @@ class Person(PropertyObservable):
 	def __init__(self, age=0):
 		super().__init__()
 		self._age = age
-	
+
 	@property
 	def age(self):
 		return self._age
@@ -2039,7 +2120,7 @@ class TrafficAuthority:
 		person.property_changed.append(
 			self.person_changed
 		)
-	
+
 	def person_changed(self, name_of_property, value):
 		"""This is the method we want to subscirbe to the property change"""
 		if name_of_property == 'age':
@@ -2057,10 +2138,11 @@ if __name__ == '__main__':
 	for age in range(14, 20):
 		print(f'setting age to {age}')
 		p.age = age
-		
+
 ```
 
 ## State (State machine)
+
 A pattern in which the object's behavior is determined by its state. An object transitions from one state to another (something needs to trigger a transition)
 
 A formalized construct which managges state and transitions is called a state machine.
@@ -2101,13 +2183,13 @@ if __name__ == '__main__':
 		],
 		... # you get the idea
 	}
-	
+
 	start_state = State.OFF_HOOK
 	exit_state = State.ON_HOOK
-	
+
 	while state != exit_state:
 		print(f'The phone is currently {state}')
-		
+
 		# loop thru all the options in current state
 		for i in range(len(rules[state])):
 			trigger = rules[state][i][0]
@@ -2120,6 +2202,7 @@ if __name__ == '__main__':
 ```
 
 ## Strategy design pattern
+
 Essentially it's blueprint which enables the exact behavior of a system to be selected at run-time. Strategy does this through composition.
 
 ```python
@@ -2146,7 +2229,7 @@ class HtmlStrategy(ListStrategy):
 
 	def end(self, buffer):
 		buffer.append('</ul>\n')
-	
+
 	def add_list_item(self, buffer, item):
 		buffer.append(f'  <li>{item}</li>\n')
 
@@ -2168,7 +2251,7 @@ class TextProcesser:
 			self.list_strategy = MarkDownListStrategy()
 		elif format == OutputFormat.HTML:
 			self.list_stratefy = HtmlListStrategy()
-	
+
 	def clear(self):
 		self.buffer.clear()
 
@@ -2182,16 +2265,17 @@ if __name__ == '__main__':
 	tp.set_output_format(OutputFormat.MARKDOWN)
 	tp.append_list(items)
 	print(tp)
-	
+
 	tp.clear()
 	tp.set_output_format(OutputFormat.HTML)
 	tp.append_list(items)
 	print(tp)
-		
-	
+
+
 ```
 
 ## Template design patter
+
 Similar to Strategy design pattern, but rather than using composition it does it thru inheritance.
 
 ```python
@@ -2211,7 +2295,7 @@ class Game(ABC):
 		print(f'Player {self.winnder_player} wins!')
 
 	def start(self): pass
-	
+
 	@property
 	def have_winner(self): pass
 
@@ -2243,7 +2327,7 @@ class Chess(Game):
 
 		self.turn += 1
 		self.current_palyer = 1 - self.current_player
-	
+
 	@property
 	def winning_player(self):
 		return self.current_player
@@ -2255,9 +2339,11 @@ if __name__ == '__main__':
 ```
 
 ## Vistor
+
 A component that knows how to traverse a data structure composed of possibly related types.
 
 Intrusive solution example
+
 ```python
 from abc import ABC
 
@@ -2267,10 +2353,10 @@ class Expression(ABC):
 class DoubleExpression(Expression):
 	def __init__(self, value):
 		self.value = value
-	
+
 #	def print(self, buffer):
 #		buffer.append(str(self.value))
-#	
+#
 #	def eval(self):
 #		return self.value
 
@@ -2278,7 +2364,7 @@ class AdditionExpression(Expression):
 	def __init__(self, left, right):
 		self.left = left
 		self.right = right
-	
+
 #	def print(self, buffer):
 #		buffer.append('(')
 #		self.left.print(buffer)
@@ -2314,16 +2400,17 @@ if __name__ == '__main__':
 			DoubleExpression(3)
 		)
 	)
-		
+
 	buffer = []  # this is the element sorta vistor
     ExpressionPrinter.print(e, buffer)
 	#e.print(buffer)
-	print(''.join(buffer), '='., e.eval()) 
-	
+	print(''.join(buffer), '='., e.eval())
+
 
 ```
 
 #### Double dispatch
+
 ```python
 # use the code from above
 # we ha ve another ExpressionPrinter
@@ -2339,7 +2426,7 @@ class AdditionExpression:
 	def __init__(self, left, right):
 		self.left = left
 		self.right = right
-	
+
 	def accept(self, visitor):
 		visitor.visit(self)
 
@@ -2350,7 +2437,7 @@ class ExpressionPrinter:
     @visitor(DoubleExpression)
 	def visit(self, de):
 		self.buffer.append(str(de.value))
-	
+
 	@visitor(AditionExpression)
 	def visit(self, ae):
 		self.buffer.append('(')
@@ -2397,4 +2484,3 @@ def visitor(arg_type):
 
 
 ```
-
