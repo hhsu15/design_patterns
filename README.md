@@ -21,7 +21,7 @@ class Journal:
 		delete self.entries[pos]
 
 # ----so far ok, but once we add more things like
-    def save(self, filename):
+  def save(self, filename):
 		pass
 
 	def load(self, filename)
@@ -2484,3 +2484,12 @@ def visitor(arg_type):
 
 
 ```
+
+*Update:*
+
+To overload a function or method, you can use the `singledispatch` or `singledispatchmethod` provided by functools.
+
+[Here](https://martinheinz.dev/blog/50)to read about about it.
+
+
+
